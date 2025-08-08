@@ -31,7 +31,7 @@ public class FileService {
     private String cloudFrontDomain;
 
     @Transactional
-    public void uploadFile(Project project, MultipartFile multipartFile) {
+    public void uploadFile(Project project, MultipartFile multipartFile, int order) {
         if (multipartFile == null || multipartFile.isEmpty()) {
             throw new IllegalArgumentException("업로드할 파일이 비어 있습니다.");
         }
@@ -61,7 +61,7 @@ public class FileService {
         String finalUrl = "https://" + cloudFrontDomain + "/" + storedFileName;
 
 //        File fileEntity = new File(originalFileName, storedFileName, s3Url.toString(), project);
-        File fileEntity = new File(originalFileName, storedFileName, finalUrl, project);
+        File fileEntity = new File(originalFileName, storedFileName, finalUrl, project, order);
         fileRepository.save(fileEntity);
     }
 

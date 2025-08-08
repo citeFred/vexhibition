@@ -36,9 +36,10 @@ public class ProjectService {
         Project savedProject = projectRepository.save(project);
 
         if (files != null && !files.isEmpty()) {
-            for (MultipartFile file : files) {
-                if (!file.isEmpty()) {
-                    fileService.uploadFile(savedProject, file);
+            for (int i = 0; i < files.size(); i++) {
+                MultipartFile file = files.get(i);
+                if (file != null && !file.isEmpty()) {
+                    fileService.uploadFile(savedProject, file, i);
                 }
             }
         }

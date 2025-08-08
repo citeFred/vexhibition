@@ -25,14 +25,18 @@ public class File extends TimeStamped {
     @Column(nullable = false)
     private String filePath;
 
+    @Column(nullable = false)
+    private Integer displayOrder;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id")
     private Project project;
 
-    public File(String originalFileName, String storedFileName, String filePath, Project project) {
+    public File(String originalFileName, String storedFileName, String filePath, Project project, Integer displayOrder) {
         this.originalFileName = originalFileName;
         this.storedFileName = storedFileName;
         this.filePath = filePath;
         this.project = project;
+        this.displayOrder = displayOrder;
     }
 }
