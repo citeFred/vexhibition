@@ -27,6 +27,9 @@ public class FileService {
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
 
+    @Value("${cloud.aws.cloudfront.domain}")
+    private String cloudFrontDomain;
+
     @Transactional
     public void uploadFile(Project project, MultipartFile multipartFile) {
         if (multipartFile == null || multipartFile.isEmpty()) {
@@ -54,9 +57,11 @@ public class FileService {
             throw new RuntimeException("S3 파일 업로드에 실패했습니다.", e);
         }
 
-        URL s3Url = s3Client.utilities().getUrl(GetUrlRequest.builder().bucket(bucket).key(storedFileName).build());
+//        URL s3Url = s3Client.utilities().getUrl(GetUrlRequest.builder().bucket(bucket).key(storedFileName).build());
+        String finalUrl = "https://" + cloudFrontDomain + "/" + storedFileName;
 
-        File fileEntity = new File(originalFileName, storedFileName, s3Url.toString(), project);
+//        File fileEntity = new File(originalFileName, storedFileName, s3Url.toString(), project);
+        File fileEntity = new File(originalFileName, storedFileName, finalUrl, project);
         fileRepository.save(fileEntity);
     }
 
