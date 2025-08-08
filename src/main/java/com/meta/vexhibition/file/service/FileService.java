@@ -1,5 +1,9 @@
 package com.meta.vexhibition.file.service;
 
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetUrlRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import com.meta.vexhibition.file.domain.File;
 import com.meta.vexhibition.file.repository.FileRepository;
 import com.meta.vexhibition.project.domain.Project;
@@ -10,18 +14,18 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.net.URL;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class FileService {
-    private final FileRepository fileRepository;
 
-    @Value("${file.upload-dir}")
-    private String uploadDir;
+    private final FileRepository fileRepository;
+    private final S3Client s3Client; // Spring이 자동으로 생성 및 주입
+
+    @Value("${cloud.aws.s3.bucket}")
+    private String bucket;
 
     @Transactional
     public void uploadFile(Project project, MultipartFile multipartFile) {
@@ -30,25 +34,37 @@ public class FileService {
         }
 
         String originalFileName = multipartFile.getOriginalFilename();
-        String storedFileName = UUID.randomUUID() + "_" + originalFileName;
-
-        Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
+        String storedFileName = createStoredFileName(originalFileName);
 
         try {
-            Files.createDirectories(uploadPath);
+            PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(storedFileName)
+                    .contentType(multipartFile.getContentType())
+                    .build();
+
+            RequestBody requestBody = RequestBody.fromInputStream(
+                    multipartFile.getInputStream(),
+                    multipartFile.getSize()
+            );
+
+            s3Client.putObject(putObjectRequest, requestBody);
+
         } catch (IOException e) {
-            throw new RuntimeException("파일 저장 디렉토리 생성에 실패했습니다: " + uploadPath.toString(), e);
+            throw new RuntimeException("S3 파일 업로드에 실패했습니다.", e);
         }
 
-        Path filePath = uploadPath.resolve(storedFileName);
+        URL s3Url = s3Client.utilities().getUrl(GetUrlRequest.builder().bucket(bucket).key(storedFileName).build());
 
-        try {
-            multipartFile.transferTo(filePath);
-        } catch (IOException e) {
-            throw new RuntimeException("파일 저장 중 오류가 발생했습니다: " + filePath.toString(), e);
-        }
-
-        File fileEntity = new File(originalFileName, storedFileName, filePath.toString(), project);
+        File fileEntity = new File(originalFileName, storedFileName, s3Url.toString(), project);
         fileRepository.save(fileEntity);
+    }
+
+    private String createStoredFileName(String originalFilename) {
+        String fileExtension = "";
+        if (originalFilename != null && originalFilename.contains(".")) {
+            fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+        }
+        return UUID.randomUUID() + fileExtension;
     }
 }
