@@ -1,0 +1,52 @@
+package com.meta.vexhibition.project.domain;
+
+import com.meta.vexhibition.domain.TimeStamped;
+import com.meta.vexhibition.exhibition.domain.Exhibition;
+import com.meta.vexhibition.file.domain.File;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@Table(name = "project")
+@Entity
+public class Project extends TimeStamped {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String title;
+
+    @Column(length = 1000, nullable = false, columnDefinition = "TEXT")
+    private String content;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "exhibition_id", nullable = false)
+    private Exhibition exhibition;
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<File> files = new ArrayList<>();
+
+    public Project(String title, String content, Exhibition exhibition) {
+        this.title = title;
+        this.content = content;
+        this.exhibition = exhibition;
+    }
+
+    public void update(String title, String content) {
+        if (title != null) {
+            this.title = title;
+        }
+
+        if (content != null) {
+            this.content = content;
+        }
+    }
+}
