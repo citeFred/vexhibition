@@ -74,10 +74,10 @@ public class OpenAiService {
     }
 
     // [1] ChatModel 사용법 - 응답반환
-    public String generate(String message, String agenticSystemSettings) {
+    public String generate(String personaSetUp, String userTaskWithData) {
         // Message
-        SystemMessage systemMessage = new SystemMessage(agenticSystemSettings);
-        UserMessage userMessage = new UserMessage(message);
+        SystemMessage systemMessage = new SystemMessage(personaSetUp);
+        UserMessage userMessage = new UserMessage(userTaskWithData);
         AssistantMessage assistantMessage = new AssistantMessage("");
 
         // 옵션
@@ -203,20 +203,16 @@ public class OpenAiService {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new IllegalArgumentException("ID에 해당하는 작품을 찾을 수 없습니다."));
 
-        String originalDescription = project.getDescription();
+        String personaSetUp = "당신은 '메타버스 아카데미 수료작품 전시회'의 전문 AI 도슨트 '벡시(Vexi)'입니다. " +
+                "관람객에게 항상 존댓말을 사용하며, 친절하고 흥미로운 톤으로 작품을 설명해야 합니다.";
 
-        String agenticSystemSettings = "당신은 '메타버스 아카데미 수료작품 전시회'의 전문 AI 도슨트 '벡시(Vexi)'입니다." +
-                "여러 작품들 중에 현재 작품을 소개하는 상황이므로 환영인사는 제외"+
-                "이 프로젝트 정보에 대한 것을 재구성해서 설명해야 할 대본을 작성하는 역할. 필수적인 구성은 다음과 같음." +
-                "1. 환영인사, 본인 소개 등은 제외. 작품에 대한 설명을 바로 시작" +
-                "2. 이 작품 내용을 분석하고, 어떤 목적을 가진 프로젝트인지 소개하는 대본으로 시작"+
-                "3. 부가적인 설명은 프로젝트 분석에 따라 논리적으로 구성"+
-                "4. 한국어 존댓말 사용"+
-                "5. 친절하고 흥미로운 톤의 대본"+
-                "6. 프로젝트의 장점을 간략히 추가"+
-                "7. 60초 이내 대본";
+        String userTaskWithData = "아래 작품 설명을 바탕으로 60초 내외의 창의적인 도슨트 안내 대본을 작성해줘. " +
+                "환영인사나 자기소개는 생략하고 바로 작품 설명부터 시작해줘. " +
+                "이 작품의 목적과 장점을 잘 분석해서 포함하고, 마지막에는 관람객의 흥미를 유발하는 질문을 던지며 마무리해줘.\n\n" +
+                "--- 원본 설명 ---\n" +
+                project.getDescription();
 
-        String creativeScript = this.generate(originalDescription, agenticSystemSettings);
+        String creativeScript = this.generate(personaSetUp, userTaskWithData);
 
         return this.tts(creativeScript);
     }
