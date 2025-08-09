@@ -200,6 +200,7 @@ public class OpenAiService {
 
     @Transactional(readOnly = true)
     public byte[] generateCreativeDescriptionAudio(Long projectId) {
+        // 텍스트 프롬프트 데이터 가공
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new IllegalArgumentException("ID에 해당하는 작품을 찾을 수 없습니다."));
 
@@ -214,6 +215,18 @@ public class OpenAiService {
 
         String creativeScript = this.generate(personaSetUp, userTaskWithData);
 
-        return this.tts(creativeScript);
+        // 옵션
+        OpenAiAudioSpeechOptions speechOptions = OpenAiAudioSpeechOptions.builder()
+                .responseFormat(OpenAiAudioApi.SpeechRequest.AudioResponseFormat.MP3)
+                .speed(1.0f)
+                .model(OpenAiAudioApi.TtsModel.TTS_1.value)
+                .build();
+
+        // AI 오디오 생성 프롬프트
+        SpeechPrompt prompt = new SpeechPrompt(creativeScript, speechOptions);
+
+        // 요청 및 응답
+        SpeechResponse response = openAiAudioSpeechModel.call(prompt);
+        return response.getResult().getOutput();
     }
 }
