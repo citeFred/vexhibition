@@ -74,9 +74,9 @@ public class OpenAiService {
     }
 
     // [1] ChatModel 사용법 - 응답반환
-    public String generate(String message) {
+    public String generate(String message, String agenticSystemSettings) {
         // Message
-        SystemMessage systemMessage = new SystemMessage("You are a helpful assistant who speaks Korean.");
+        SystemMessage systemMessage = new SystemMessage(agenticSystemSettings);
         UserMessage userMessage = new UserMessage(message);
         AssistantMessage assistantMessage = new AssistantMessage("");
 
@@ -196,5 +196,28 @@ public class OpenAiService {
         String description = project.getDescription();
 
         return this.tts(description);
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] generateCreativeDescriptionAudio(Long projectId) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new IllegalArgumentException("ID에 해당하는 작품을 찾을 수 없습니다."));
+
+        String originalDescription = project.getDescription();
+
+        String agenticSystemSettings = "당신은 '메타버스 아카데미 수료작품 전시회'의 전문 AI 도슨트 '벡시(Vexi)'입니다." +
+                "여러 작품들 중에 현재 작품을 소개하는 상황이므로 환영인사는 제외"+
+                "이 프로젝트 정보에 대한 것을 재구성해서 설명해야 할 대본을 작성하는 역할. 필수적인 구성은 다음과 같음." +
+                "1. 환영인사, 본인 소개 등은 제외. 작품에 대한 설명을 바로 시작" +
+                "2. 이 작품 내용을 분석하고, 어떤 목적을 가진 프로젝트인지 소개하는 대본으로 시작"+
+                "3. 부가적인 설명은 프로젝트 분석에 따라 논리적으로 구성"+
+                "4. 한국어 존댓말 사용"+
+                "5. 친절하고 흥미로운 톤의 대본"+
+                "6. 프로젝트의 장점을 간략히 추가"+
+                "7. 60초 이내 대본";
+
+        String creativeScript = this.generate(originalDescription, agenticSystemSettings);
+
+        return this.tts(creativeScript);
     }
 }

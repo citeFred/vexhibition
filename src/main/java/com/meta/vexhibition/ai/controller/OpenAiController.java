@@ -17,10 +17,10 @@ import java.util.Map;
 public class OpenAiController {
     private final OpenAiService openAIService;
 
-    @PostMapping("/chat")
-    public String chat(@RequestBody Map<String, String> body) {
-        return openAIService.generate(body.get("text"));
-    }
+//    @PostMapping("/chat")
+//    public String chat(@RequestBody Map<String, String> body) {
+//        return openAIService.generate(body.get("text"));
+//    }
 
     @PostMapping("/chat/stream")
     public Flux<String> streamChat(@RequestBody Map<String, String> body) {
@@ -41,6 +41,17 @@ public class OpenAiController {
     @GetMapping("/ai/tts/projects/{projectId}/description-audio")
     public ResponseEntity<byte[]> getProjectDescriptionAudio(@PathVariable Long projectId) {
         byte[] audioData = openAIService.generateDescriptionAudio(projectId);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.valueOf("audio/mpeg"));
+        headers.setContentLength(audioData.length);
+
+        return new ResponseEntity<>(audioData, headers, HttpStatus.OK);
+    }
+
+    @GetMapping("/ai/tts/projects/{projectId}/docent")
+    public ResponseEntity<byte[]> generateCreativeDescriptionAudio(@PathVariable Long projectId) {
+        byte[] audioData = openAIService.generateCreativeDescriptionAudio(projectId);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.valueOf("audio/mpeg"));
