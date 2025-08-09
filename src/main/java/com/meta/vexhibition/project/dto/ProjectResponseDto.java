@@ -19,7 +19,6 @@ public class ProjectResponseDto {
     private int generation;
     private String title;
     private String description;
-    private String exhibitionTitle;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createAt;
@@ -36,10 +35,6 @@ public class ProjectResponseDto {
         this.description = project.getDescription();
         this.createAt = project.getCreatedAt();
         this.modifiedAt = project.getModifiedAt();
-
-        if (project.getExhibition() != null) {
-            this.exhibitionTitle = project.getExhibition().getTitle();
-        }
 
         if (project.getFiles() != null) {
             this.files = project.getFiles().stream()
