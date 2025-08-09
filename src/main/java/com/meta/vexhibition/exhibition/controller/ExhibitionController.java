@@ -4,6 +4,7 @@ import com.meta.vexhibition.common.ApiResponseDto;
 import com.meta.vexhibition.exhibition.dto.ExhibitionRequestDto;
 import com.meta.vexhibition.exhibition.dto.ExhibitionResponseDto;
 import com.meta.vexhibition.exhibition.service.ExhibitionService;
+import com.meta.vexhibition.project.dto.ProjectResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,12 +28,14 @@ public class ExhibitionController {
         try {
             ExhibitionResponseDto exhibitionData = exhibitionService.getExhibitionById(id);
 
-            ApiResponseDto<ExhibitionResponseDto> successResponse = new ApiResponseDto<>(
-                    exhibitionData,
-                    "전시회 정보 조회에 성공했습니다"
+            List<ProjectResponseDto> projects = exhibitionData.getProjects();
+
+            ApiResponseDto<List<ProjectResponseDto>> response = new ApiResponseDto<>(
+                    projects,
+                    "프로젝트 목록 조회에 성공했습니다"
             );
 
-            return ResponseEntity.ok(successResponse);
+            return ResponseEntity.ok(response);
 
         } catch (IllegalArgumentException ex) {
 
