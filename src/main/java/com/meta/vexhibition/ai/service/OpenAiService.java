@@ -1,5 +1,6 @@
 package com.meta.vexhibition.ai.service;
 
+import com.meta.vexhibition.ai.dto.AudioResponseDto;
 import com.meta.vexhibition.project.domain.Project;
 import com.meta.vexhibition.project.repository.ProjectRepository;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 @Service
@@ -199,7 +201,7 @@ public class OpenAiService {
     }
 
     @Transactional(readOnly = true)
-    public byte[] generateCreativeDescriptionAudio(Long projectId) {
+    public AudioResponseDto generateCreativeDescriptionAudio(Long projectId) {
         // 텍스트 프롬프트 데이터 가공
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new IllegalArgumentException("ID에 해당하는 작품을 찾을 수 없습니다."));
@@ -225,8 +227,14 @@ public class OpenAiService {
         // AI 오디오 생성 프롬프트
         SpeechPrompt prompt = new SpeechPrompt(creativeScript, speechOptions);
 
-        // 요청 및 응답
+        // AI AUDIO 파일 요청 및 byte[] 응답
         SpeechResponse response = openAiAudioSpeechModel.call(prompt);
-        return response.getResult().getOutput();
+
+        // byte스트림의 BASE64 인코딩
+        byte[] audioData = response.getResult().getOutput();
+
+        String base64Audio = Base64.getEncoder().encodeToString(audioData);
+
+        return new AudioResponseDto(base64Audio);
     }
 }

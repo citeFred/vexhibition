@@ -1,6 +1,8 @@
 package com.meta.vexhibition.ai.controller;
 
+import com.meta.vexhibition.ai.dto.AudioResponseDto;
 import com.meta.vexhibition.ai.service.OpenAiService;
+import com.meta.vexhibition.common.ApiResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -50,13 +52,15 @@ public class OpenAiController {
     }
 
     @GetMapping("/ai/tts/projects/{projectId}/docent")
-    public ResponseEntity<byte[]> generateCreativeDescriptionAudio(@PathVariable Long projectId) {
-        byte[] audioData = openAIService.generateCreativeDescriptionAudio(projectId);
+    public ResponseEntity<ApiResponseDto<AudioResponseDto>> getCreativeProjectDescriptionAudio(@PathVariable Long projectId) {
+        AudioResponseDto audioDto = openAIService.generateCreativeDescriptionAudio(projectId);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.valueOf("audio/mpeg"));
-        headers.setContentLength(audioData.length);
+        ApiResponseDto<AudioResponseDto> response = new ApiResponseDto<>(
+                audioDto,
+                "AI 도슨트 음성(Base64) 생성에 성공했습니다."
+        );
+        System.out.println("AI Audio응답 완료");
 
-        return new ResponseEntity<>(audioData, headers, HttpStatus.OK);
+        return ResponseEntity.ok(response);
     }
 }
