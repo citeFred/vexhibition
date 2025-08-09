@@ -1,5 +1,7 @@
 package com.meta.vexhibition.ai.service;
 
+import com.meta.vexhibition.project.domain.Project;
+import com.meta.vexhibition.project.repository.ProjectRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.audio.transcription.AudioTranscriptionPrompt;
 import org.springframework.ai.audio.transcription.AudioTranscriptionResponse;
@@ -24,6 +26,7 @@ import org.springframework.ai.openai.audio.speech.SpeechResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 
 import java.util.ArrayList;
@@ -41,6 +44,9 @@ public class OpenAiService {
 
     // 대화 기록을 포함하여 AI 응답을 생성하기 위한 인터페이스 직접 사용
     private final ChatModel chatModel;
+
+    // Project 정보 활용을 위한 주입
+    private final ProjectRepository projectRepository;
 
     @Value("${spring.ai.openai.chat.options.model}")
     private String aiModel;
@@ -180,5 +186,15 @@ public class OpenAiService {
         // 요청 및 응답
         AudioTranscriptionResponse response = openAiAudioTranscriptionModel.call(prompt);
         return response.getResult().getOutput();
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] generateDescriptionAudio(Long projectId) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new IllegalArgumentException("ID에 해당하는 작품을 찾을 수 없습니다."));
+
+        String description = project.getDescription();
+
+        return this.tts(description);
     }
 }
