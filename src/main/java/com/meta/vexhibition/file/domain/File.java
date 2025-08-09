@@ -23,7 +23,7 @@ public class File extends TimeStamped {
     private String storedFileName;
 
     @Column(nullable = false)
-    private String filePath;
+    private String path;
 
     @Column(nullable = false)
     private Integer displayOrder;
@@ -32,10 +32,10 @@ public class File extends TimeStamped {
     @JoinColumn(name = "project_id")
     private Project project;
 
-    public File(String originalFileName, String storedFileName, String filePath, Project project, Integer displayOrder) {
+    public File(String originalFileName, String storedFileName, String path, Project project, Integer displayOrder) {
         this.originalFileName = originalFileName;
         this.storedFileName = storedFileName;
-        this.filePath = filePath;
+        this.path = path;
         this.project = project;
         this.displayOrder = displayOrder;
     }
