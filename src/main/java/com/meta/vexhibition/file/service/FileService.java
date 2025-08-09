@@ -2,7 +2,6 @@ package com.meta.vexhibition.file.service;
 
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.GetUrlRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import com.meta.vexhibition.file.domain.File;
 import com.meta.vexhibition.file.repository.FileRepository;
@@ -14,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.UUID;
 
 @Service
@@ -22,7 +20,7 @@ import java.util.UUID;
 public class FileService {
 
     private final FileRepository fileRepository;
-    private final S3Client s3Client; // Spring이 자동으로 생성 및 주입
+    private final S3Client s3Client;
 
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
@@ -57,19 +55,13 @@ public class FileService {
             throw new RuntimeException("S3 파일 업로드에 실패했습니다.", e);
         }
 
-//        URL s3Url = s3Client.utilities().getUrl(GetUrlRequest.builder().bucket(bucket).key(storedFileName).build());
         String finalUrl = "https://" + cloudFrontDomain + "/" + storedFileName;
 
-//        File fileEntity = new File(originalFileName, storedFileName, s3Url.toString(), project);
         File fileEntity = new File(originalFileName, storedFileName, finalUrl, project, order);
         fileRepository.save(fileEntity);
     }
 
     private String createStoredFileName(String originalFilename) {
-        String fileExtension = "";
-        if (originalFilename != null && originalFilename.contains(".")) {
-            fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
-        }
-        return UUID.randomUUID() + fileExtension;
+        return UUID.randomUUID().toString() + "-" + originalFilename;
     }
 }
