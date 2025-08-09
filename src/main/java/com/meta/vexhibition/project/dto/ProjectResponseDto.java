@@ -15,8 +15,10 @@ import java.util.stream.Collectors; // Collectors import 추가
 @NoArgsConstructor
 public class ProjectResponseDto {
     private Long id;
+    private String teamname;
+    private int generation;
     private String title;
-    private String content;
+    private String description;
     private String exhibitionTitle;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
@@ -28,8 +30,10 @@ public class ProjectResponseDto {
 
     public ProjectResponseDto(Project project) {
         this.id = project.getId();
+        this.teamname = project.getTeamname();
         this.title = project.getTitle();
-        this.content = project.getContent();
+        this.generation = project.getGeneration();
+        this.description = project.getDescription();
         this.createAt = project.getCreatedAt();
         this.modifiedAt = project.getModifiedAt();
 

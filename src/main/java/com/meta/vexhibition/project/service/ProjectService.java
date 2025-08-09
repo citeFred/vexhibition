@@ -29,8 +29,10 @@ public class ProjectService {
         Exhibition exhibition = getValidExhibition(exhibitionId);
 
         Project project = new Project(
+                projectRequestDto.getTeamname(),
                 projectRequestDto.getTitle(),
-                projectRequestDto.getContent(),
+                projectRequestDto.getGeneration(),
+                projectRequestDto.getDescription(),
                 exhibition
         );
         Project savedProject = projectRepository.save(project);
@@ -72,7 +74,7 @@ public class ProjectService {
 
         project.update(
                 projectUpdateRequestDto.getTitle(),
-                projectUpdateRequestDto.getContent()
+                projectUpdateRequestDto.getDescription()
         );
         return new ProjectResponseDto(project);
     }

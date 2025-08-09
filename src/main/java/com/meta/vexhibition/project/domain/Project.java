@@ -22,10 +22,16 @@ public class Project extends TimeStamped {
     private Long id;
 
     @Column(nullable = false)
+    private String teamname;
+
+    @Column(nullable = false)
+    private int generation;
+
+    @Column(nullable = false)
     private String title;
 
     @Column(length = 1000, nullable = false, columnDefinition = "TEXT")
-    private String content;
+    private String description;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "exhibition_id", nullable = false)
@@ -34,19 +40,21 @@ public class Project extends TimeStamped {
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<File> files = new ArrayList<>();
 
-    public Project(String title, String content, Exhibition exhibition) {
+    public Project(String teamname, String title, int generation, String description, Exhibition exhibition) {
+        this.teamname = teamname;
+        this.generation = generation;
         this.title = title;
-        this.content = content;
+        this.description = description;
         this.exhibition = exhibition;
     }
 
-    public void update(String title, String content) {
+    public void update(String title, String description) {
         if (title != null) {
             this.title = title;
         }
 
-        if (content != null) {
-            this.content = content;
+        if (description != null) {
+            this.description = description;
         }
     }
 }

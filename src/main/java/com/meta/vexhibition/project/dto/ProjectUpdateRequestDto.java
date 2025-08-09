@@ -6,6 +6,8 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ProjectUpdateRequestDto {
+    private String teamname;
     private String title;
-    private String content;
+    private int generation;
+    private String description;
 }
