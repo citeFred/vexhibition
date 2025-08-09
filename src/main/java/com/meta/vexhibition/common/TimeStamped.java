@@ -1,4 +1,4 @@
-package com.meta.vexhibition.domain;
+package com.meta.vexhibition.common;
 
 import jakarta.persistence.*;
 import lombok.Getter;

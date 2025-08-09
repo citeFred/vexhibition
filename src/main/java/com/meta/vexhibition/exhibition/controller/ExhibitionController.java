@@ -1,5 +1,6 @@
 package com.meta.vexhibition.exhibition.controller;
 
+import com.meta.vexhibition.common.ApiResponseDto;
 import com.meta.vexhibition.exhibition.dto.ExhibitionRequestDto;
 import com.meta.vexhibition.exhibition.dto.ExhibitionResponseDto;
 import com.meta.vexhibition.exhibition.service.ExhibitionService;
@@ -15,6 +16,35 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ExhibitionController {
     private final ExhibitionService exhibitionService;
+
+    /**
+     * For UnrealEngine Request&Response
+     * @param id
+     * @return Project DATA list
+     */
+    @GetMapping("/exhibitions/{id}/public")
+    public ResponseEntity<ApiResponseDto<?>> getPublicExhibitionById(@PathVariable Long id) {
+        try {
+            ExhibitionResponseDto exhibitionData = exhibitionService.getExhibitionById(id);
+
+            ApiResponseDto<ExhibitionResponseDto> successResponse = new ApiResponseDto<>(
+                    exhibitionData,
+                    "전시회 정보 조회에 성공했습니다"
+            );
+
+            return ResponseEntity.ok(successResponse);
+
+        } catch (IllegalArgumentException ex) {
+
+            ApiResponseDto<?> errorResponse = new ApiResponseDto<>(
+                    HttpStatus.NOT_FOUND,
+                    ex.getMessage()
+            );
+
+            return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+        }
+    }
+
 
     @PostMapping("/exhibitions")
     public ResponseEntity<ExhibitionResponseDto> createExhibition(@RequestBody ExhibitionRequestDto exhibitionRequestDto) {

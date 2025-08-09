@@ -1,5 +1,5 @@
 package com.meta.vexhibition.file.domain;
-import com.meta.vexhibition.domain.TimeStamped;
+import com.meta.vexhibition.common.TimeStamped;
 import com.meta.vexhibition.project.domain.Project;
 import jakarta.persistence.*;
 import lombok.Getter;
