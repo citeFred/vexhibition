@@ -2,6 +2,7 @@ package com.meta.vexhibition.file.service;
 
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import com.meta.vexhibition.file.domain.File;
 import com.meta.vexhibition.file.repository.FileRepository;
@@ -63,5 +64,17 @@ public class FileService {
 
     private String createStoredFileName(String originalFilename) {
         return UUID.randomUUID().toString() + "-" + originalFilename;
+    }
+
+    public void deleteFile(String storedFileName) {
+        try {
+            DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(storedFileName)
+                    .build();
+            s3Client.deleteObject(deleteObjectRequest);
+        } catch (Exception e) {
+            throw new RuntimeException("S3 파일 삭제에 실패했습니다.", e);
+        }
     }
 }

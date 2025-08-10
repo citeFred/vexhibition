@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>작품 수정</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+
+<div class="container mx-auto mt-10 p-8 bg-white shadow-md rounded-lg max-w-2xl">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">작품 수정</h1>
+
+    <form th:action="@{/admin/exhibitions/{exhibitionId}/projects/{projectId}/edit(exhibitionId=${exhibitionId}, projectId=${projectDto.id})}"
+          th:object="${projectDto}"
+          method="post"
+          enctype="multipart/form-data">
+
+        <div class="mb-4">
+            <label for="title" class="block ...">작품 제목</label>
+            <input type="text" id="title" th:field="*{title}" class="shadow ...">
+        </div>
+        <div class="mb-6">
+            <label class="block text-gray-700 text-sm font-bold mb-2">기존 파일 관리</label>
+            <div th:each="file : *{files}" class="flex items-center mt-2">
+                <input type="checkbox" name="deleteFileIds" th:value="${file.id}" class="h-4 w-4">
+                <img th:src="${file.path}" alt="image" class="h-10 w-10 object-cover rounded ml-2">
+                <span class="ml-2 text-sm text-gray-600" th:text="${file.originalFileName}"></span>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <label for="addFiles" class="block ...">새 이미지 파일 추가</label>
+            <input type="file" id="addFiles" name="addFiles" multiple class="block ..."/>
+        </div>
+
+        <div class="flex items-center justify-between">
+            <button type="submit" class="bg-blue-500 ...">수정 완료</button>
+            <a th:href="@{/admin/exhibitions/{id}/projects(id=${exhibitionId})}" class="inline-block ...">취소</a>
+        </div>
+    </form>
+</div>
+</body>
+</html>

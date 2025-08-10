@@ -48,13 +48,16 @@ public class Project extends TimeStamped {
         this.exhibition = exhibition;
     }
 
-    public void update(String title, String description) {
-        if (title != null) {
+    public void update(String title, String description, String teamname, int generation) {
+        if (title != null && !title.isEmpty()) {
             this.title = title;
         }
-
-        if (description != null) {
+        if (description != null && !description.isEmpty()) {
             this.description = description;
         }
+        if (teamname != null && !teamname.isEmpty()) {
+            this.teamname = teamname;
+        }
+        this.generation = generation;
     }
 }

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>새 작품 추가</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+
+<div class="container mx-auto mt-10 p-8 bg-white shadow-md rounded-lg max-w-2xl">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">새 작품 추가</h1>
+
+    <form th:action="@{/admin/exhibitions/{id}/projects(id=${exhibitionId})}"
+          th:object="${projectRequestDto}"
+          method="post"
+          enctype="multipart/form-data">
+
+        <div class="mb-4">
+            <label for="teamname" class="block text-gray-700 text-sm font-bold mb-2">팀명</label>
+            <input type="text" id="teamname" th:field="*{teamname}"
+                   class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                   placeholder="팀 이름을 입력하세요">
+        </div>
+
+        <div class="mb-4">
+            <label for="generation" class="block text-gray-700 text-sm font-bold mb-2">기수</label>
+            <input type="number" id="generation" th:field="*{generation}"
+                   class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                   placeholder="기수를 숫자로 입력하세요 (예: 5)">
+        </div>
+
+        <div class="mb-4">
+            <label for="title" class="block text-gray-700 text-sm font-bold mb-2">작품 제목</label>
+            <input type="text" id="title" th:field="*{title}"
+                   class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                   placeholder="작품 제목을 입력하세요">
+        </div>
+
+        <div class="mb-6">
+            <label for="description" class="block text-gray-700 text-sm font-bold mb-2">작품 설명</label>
+            <textarea id="description" th:field="*{description}" rows="5"
+                      class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                      placeholder="작품에 대한 상세 설명을 입력하세요"></textarea>
+        </div>
+
+        <div class="mb-6">
+            <label for="files" class="block text-gray-700 text-sm font-bold mb-2">이미지 파일 (다중 선택 가능)</label>
+            <input type="file" id="files" name="files" multiple
+                   class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
+        </div>
+
+        <div class="flex items-center justify-between">
+            <button type="submit"
+                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                작품 등록
+            </button>
+            <a th:href="@{/admin}"
+               class="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800">
+                취소
+            </a>
+        </div>
+    </form>
+</div>
+
+</body>
+</html>

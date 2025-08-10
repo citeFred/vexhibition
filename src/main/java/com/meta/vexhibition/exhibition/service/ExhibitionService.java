@@ -4,6 +4,8 @@ import com.meta.vexhibition.exhibition.domain.Exhibition;
 import com.meta.vexhibition.exhibition.dto.ExhibitionRequestDto;
 import com.meta.vexhibition.exhibition.dto.ExhibitionResponseDto;
 import com.meta.vexhibition.exhibition.repository.ExhibitionRepository;
+import com.meta.vexhibition.file.service.FileService;
+import com.meta.vexhibition.project.domain.Project;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +17,7 @@ import java.util.List;
 
 public class ExhibitionService {
     private final ExhibitionRepository exhibitionRepository;
+    private final FileService fileService;
 
     @Transactional
     public ExhibitionResponseDto createExhibition(ExhibitionRequestDto exhibitionRequestDto) {
@@ -51,8 +54,19 @@ public class ExhibitionService {
     }
 
     @Transactional
-    public void deleteExhibition(Long id) {
-        Exhibition exhibition = findExhibition(id);
+    public void deleteExhibition(Long exhibitionId) {
+        Exhibition exhibition = exhibitionRepository.findById(exhibitionId)
+                .orElseThrow(() -> new IllegalArgumentException("ID에 해당하는 전시회를 찾을 수 없습니다."));
+
+        if (exhibition.getProjects() != null && !exhibition.getProjects().isEmpty()) {
+            for (Project project : exhibition.getProjects()) {
+                if (project.getFiles() != null && !project.getFiles().isEmpty()) {
+                    project.getFiles().forEach(file -> {
+                        fileService.deleteFile(file.getStoredFileName());
+                    });
+                }
+            }
+        }
         exhibitionRepository.delete(exhibition);
     }
 

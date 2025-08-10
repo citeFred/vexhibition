@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Vexhibition 관리자 페이지</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+
+<div class="container mx-auto mt-10">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">VExhibition 관리자 대시보드</h1>
+        <a th:href="@{/admin/exhibitions/new}"
+           class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            새 전시회 추가
+        </a>
+    </div>
+
+    <div class="bg-white shadow-md rounded-lg p-6">
+        <h2 class="text-2xl font-semibold mb-4 text-gray-700">전시회 목록</h2>
+        <div class="overflow-x-auto">
+            <table class="min-w-full bg-white">
+                <thead class="bg-gray-200">
+                <tr>
+                    <th class="py-3 px-4 text-left">ID</th>
+                    <th class="py-3 px-4 text-left">전시회 제목</th>
+                    <th class="py-3 px-4 text-left">생성일</th>
+                    <th class="py-3 px-4 text-left">관리</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="exhibition : ${exhibitions}" class="border-b">
+                    <td class="py-3 px-4" th:text="${exhibition.id}">1</td>
+                    <td class="py-3 px-4" th:text="${exhibition.title}">메타버스 아카데미 5기</td>
+                    <td class="py-3 px-4" th:text="${#temporals.format(exhibition.createAt, 'yyyy-MM-dd HH:mm')}">2025-08-10</td>
+                    <td class="py-3 px-4">
+                        <a th:href="@{/admin/exhibitions/{id}/projects(id=${exhibition.id})}"
+                           class="text-indigo-600 hover:text-indigo-900 mr-4">작품 관리</a>
+
+                        <a th:href="@{/admin/exhibitions/{id}/delete(id=${exhibition.id})}"
+                           onclick="return confirm('정말로 이 전시회를 삭제하시겠습니까? 전시회에 속한 모든 작품과 파일이 영구적으로 삭제됩니다.')"
+                           class="text-red-600 hover:text-red-900">삭제</a>
+                    </td>
+                </tr>
+                <tr th:if="${exhibitions.isEmpty()}">
+                    <td colspan="4" class="py-3 px-4 text-center text-gray-500">생성된 전시회가 없습니다.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

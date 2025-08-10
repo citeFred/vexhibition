@@ -59,9 +59,9 @@ public class ProjectController {
     public ResponseEntity<ProjectResponseDto> updateProject(
             @PathVariable Long exhibitionId,
             @PathVariable Long id,
-            @ModelAttribute ProjectUpdateRequestDto projectUpdateRequestDto
-            ) {
-        ProjectResponseDto updatedProject = projectService.updateProject(exhibitionId, id, projectUpdateRequestDto);
+            @ModelAttribute ProjectUpdateRequestDto projectUpdateRequestDto,
+            @RequestParam(value = "addFiles", required = false) List<MultipartFile> addFiles) {
+        ProjectResponseDto updatedProject = projectService.updateProject(exhibitionId, id, projectUpdateRequestDto, addFiles);
         return ResponseEntity.ok(updatedProject);
     }
 
