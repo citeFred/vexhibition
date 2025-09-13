@@ -62,28 +62,35 @@ public class FileService {
     public int uploadGifAsFrames(Production production, MultipartFile gifFile, int startOrder) {
         if (isInvalidFile(gifFile)) return 0;
 
-        try {
-            // [수정된 부분] InputStream을 byte[]로 변환하여 메소드에 전달합니다.
-            final List<BufferedImage> frames = Imaging.getAllBufferedImages(gifFile.getInputStream().readAllBytes());
+        final int MAX_FRAMES = 15; // 추출할 최대 프레임 수 정의
 
-            for (int i = 0; i < frames.size(); i++) {
-                BufferedImage frame = frames.get(i);
-                // 각 프레임을 PNG 바이트 배열로 변환
+        try {
+            final List<BufferedImage> allFrames = Imaging.getAllBufferedImages(gifFile.getInputStream().readAllBytes());
+            int totalFrames = allFrames.size();
+
+            if (totalFrames == 0) return 0;
+
+            // 건너뛸 간격 계산 (예: 96프레임 -> 96 / 15 = 6, 약 6프레임마다 1개씩 추출)
+            int step = Math.max(1, totalFrames / MAX_FRAMES);
+            int savedFrameCount = 0;
+
+            for (int i = 0; i < totalFrames; i += step) {
+                if(savedFrameCount >= MAX_FRAMES) break; // 최대 프레임 수 초과 방지
+
+                BufferedImage frame = allFrames.get(i);
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 ImageIO.write(frame, "png", baos);
                 byte[] pngBytes = baos.toByteArray();
 
-                // 프레임별 파일 이름 생성 (예: uuid-original_frame_0.png)
-                String originalFrameName = stripExtension(gifFile.getOriginalFilename()) + "_frame_" + i + ".png";
+                String originalFrameName = stripExtension(gifFile.getOriginalFilename()) + "_frame_" + savedFrameCount + ".png";
                 String storedFrameName = createStoredFileName(originalFrameName);
 
-                // 각 PNG 프레임을 S3에 업로드
                 uploadToS3(storedFrameName, pngBytes, "image/png");
 
-                // 각 프레임에 대한 파일 정보를 DB에 저장 (순서가 중요)
-                saveFileEntity(production, originalFrameName, storedFrameName, startOrder + i);
+                saveFileEntity(production, originalFrameName, storedFrameName, startOrder + savedFrameCount);
+                savedFrameCount++;
             }
-            return frames.size(); // 업로드된 프레임 수 반환
+            return savedFrameCount;
         } catch (Exception e) {
             throw new RuntimeException("GIF 파일을 PNG 프레임으로 분할하는 데 실패했습니다.", e);
         }
@@ -133,3 +140,4 @@ public class FileService {
         return fileName.substring(0, pos);
     }
 }
+
