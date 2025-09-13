@@ -18,16 +18,17 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class ProductionService {
     private final ProductionRepository productionRepository;
     private final ExhibitionRepository exhibitionRepository;
     private final FileService fileService;
     private final FileRepository fileRepository;
 
-    @Transactional
     public ProductionResponseDto createProduction(Long exhibitionId, ProductionRequestDto productionRequestDto, List<MultipartFile> files) {
         Exhibition exhibition = getValidExhibition(exhibitionId);
 
@@ -41,15 +42,63 @@ public class ProductionService {
         Production savedProduction = productionRepository.save(production);
 
         if (files != null && !files.isEmpty()) {
-            for (int i = 0; i < files.size(); i++) {
-                MultipartFile file = files.get(i);
+            int currentOrder = 0;
+            for (MultipartFile file : files) {
                 if (file != null && !file.isEmpty()) {
-                    fileService.uploadFile(savedProduction, file, i);
+                    // 파일의 ContentType을 확인하여 GIF인지 판별
+                    if (Objects.equals(file.getContentType(), "image/gif")) {
+                        // GIF 파일이면 프레임으로 분할하여 업로드
+                        int frameCount = fileService.uploadGifAsFrames(savedProduction, file, currentOrder);
+                        currentOrder += frameCount; // 생성된 프레임 수만큼 순서 증가
+                    } else {
+                        // 일반 이미지 파일이면 그대로 업로드
+                        fileService.uploadFile(savedProduction, file, currentOrder);
+                        currentOrder++; // 순서 1 증가
+                    }
                 }
             }
         }
 
         return new ProductionResponseDto(savedProduction);
+    }
+
+    public ProductionResponseDto updateProduction(Long exhibitionId, Long productionId, ProductionUpdateRequestDto requestDto,
+                                                  List<MultipartFile> addFiles) {
+        Production production = getValidExhibitionAndProduction(exhibitionId, productionId);
+
+        production.update(requestDto.getTitle(), requestDto.getDescription(), requestDto.getTeamname(), requestDto.getGeneration());
+
+        List<Long> deleteFileIds = requestDto.getDeleteFileIds();
+        if (deleteFileIds != null && !deleteFileIds.isEmpty()) {
+            List<File> filesToDelete = fileRepository.findAllById(deleteFileIds);
+            filesToDelete.forEach(file -> {
+                fileService.deleteFile(file.getStoredFileName());
+                production.getFiles().remove(file);
+            });
+        }
+
+        if (addFiles != null && !addFiles.isEmpty()) {
+            int maxOrder = production.getFiles().stream()
+                    .mapToInt(File::getDisplayOrder)
+                    .max()
+                    .orElse(-1);
+
+            int currentOrder = maxOrder + 1;
+
+            for (MultipartFile file : addFiles) {
+                if (file != null && !file.isEmpty()) {
+                    if (Objects.equals(file.getContentType(), "image/gif")) {
+                        int frameCount = fileService.uploadGifAsFrames(production, file, currentOrder);
+                        currentOrder += frameCount;
+                    } else {
+                        fileService.uploadFile(production, file, currentOrder);
+                        currentOrder++;
+                    }
+                }
+            }
+        }
+
+        return new ProductionResponseDto(production);
     }
 
     @Transactional(readOnly = true)
@@ -71,41 +120,6 @@ public class ProductionService {
         return new ProductionResponseDto(production);
     }
 
-    @Transactional
-    public ProductionResponseDto updateProduction(Long exhibitionId, Long productionId, ProductionUpdateRequestDto requestDto,
-                                               List<MultipartFile> addFiles) {
-        Production production = getValidExhibitionAndProduction(exhibitionId, productionId);
-
-        production.update(requestDto.getTitle(), requestDto.getDescription(), requestDto.getTeamname(), requestDto.getGeneration());
-
-        List<Long> deleteFileIds = requestDto.getDeleteFileIds();
-        if (deleteFileIds != null && !deleteFileIds.isEmpty()) {
-            List<File> filesToDelete = fileRepository.findAllById(deleteFileIds);
-
-            filesToDelete.forEach(file -> {
-                fileService.deleteFile(file.getStoredFileName());
-                production.getFiles().remove(file);
-            });
-        }
-
-        if (addFiles != null && !addFiles.isEmpty()) {
-            int maxOrder = production.getFiles().stream()
-                    .mapToInt(File::getDisplayOrder)
-                    .max()
-                    .orElse(-1);
-
-            for (int i = 0; i < addFiles.size(); i++) {
-                MultipartFile file = addFiles.get(i);
-                if (!file.isEmpty()) {
-                    fileService.uploadFile(production, file, maxOrder + 1 + i);
-                }
-            }
-        }
-
-        return new ProductionResponseDto(production);
-    }
-
-    @Transactional
     public void deleteProduction(Long exhibitionId, Long productionId) {
         Production production = getValidExhibitionAndProduction(exhibitionId, productionId);
 
