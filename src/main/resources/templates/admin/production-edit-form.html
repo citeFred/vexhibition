@@ -15,27 +15,58 @@
           method="post"
           enctype="multipart/form-data">
 
+        <!-- title, teamname, generation, description 등 텍스트 입력 필드들 -->
         <div class="mb-4">
-            <label for="title" class="block ...">작품 제목</label>
-            <input type="text" id="title" th:field="*{title}" class="shadow ...">
+            <label for="teamname" class="block text-gray-700 text-sm font-bold mb-2">팀명</label>
+            <input type="text" id="teamname" th:field="*{teamname}" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700">
+        </div>
+        <div class="mb-4">
+            <label for="generation" class="block text-gray-700 text-sm font-bold mb-2">기수</label>
+            <input type="number" id="generation" th:field="*{generation}" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700">
+        </div>
+        <div class="mb-4">
+            <label for="title" class="block text-gray-700 text-sm font-bold mb-2">작품 제목</label>
+            <input type="text" id="title" th:field="*{title}" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700">
         </div>
         <div class="mb-6">
-            <label class="block text-gray-700 text-sm font-bold mb-2">기존 파일 관리</label>
-            <div th:each="file : *{files}" class="flex items-center mt-2">
+            <label for="description" class="block text-gray-700 text-sm font-bold mb-2">작품 설명</label>
+            <textarea id="description" th:field="*{description}" rows="5" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700"></textarea>
+        </div>
+
+
+        <!-- 기존 파일 관리 -->
+        <div class="mb-6">
+            <label class="block text-gray-700 text-sm font-bold mb-2">기존 파일 관리 (삭제할 파일 선택)</label>
+            <!-- th:each의 file 변수는 이제 GroupedFileResponseDto 입니다. -->
+            <div th:each="file : *{files}" class="flex items-center mt-2 p-2 border rounded-md">
+                <!--
+                  GIF의 경우 대표 ID(첫 프레임 ID)만 전송됩니다.
+                  서버에서 이 ID를 보고 나머지 프레임도 함께 삭제하도록 처리합니다.
+                -->
                 <input type="checkbox" name="deleteFileIds" th:value="${file.id}" class="h-4 w-4">
-                <img th:src="${file.path}" alt="image" class="h-10 w-10 object-cover rounded ml-2">
+
+                <!--
+                  [수정된 부분]
+                  file.path 대신 file.paths 리스트의 첫 번째 항목([0])을 썸네일로 사용합니다.
+                  정적 이미지는 어차피 paths에 항목이 1개뿐입니다.
+                -->
+                <img th:src="${file.paths[0]}" alt="image" class="h-10 w-10 object-cover rounded ml-2">
+
                 <span class="ml-2 text-sm text-gray-600" th:text="${file.originalFileName}"></span>
+
+                <!-- GIF인 경우 프레임 수를 표시해줍니다. -->
+                <span th:if="${file.type == 'ANIMATED'}" class="ml-auto text-xs text-blue-500 bg-blue-100 px-2 py-1 rounded-full" th:text="${#lists.size(file.paths)} + ' frames'"></span>
             </div>
         </div>
 
         <div class="mb-6">
-            <label for="addFiles" class="block ...">새 이미지 파일 추가</label>
-            <input type="file" id="addFiles" name="addFiles" multiple class="block ..."/>
+            <label for="addFiles" class="block text-gray-700 text-sm font-bold mb-2">새 이미지 파일 추가</label>
+            <input type="file" id="addFiles" name="addFiles" multiple class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
         </div>
 
         <div class="flex items-center justify-between">
-            <button type="submit" class="bg-blue-500 ...">수정 완료</button>
-            <a th:href="@{/admin/exhibitions/{id}/productions(id=${exhibitionId})}" class="inline-block ...">취소</a>
+            <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">수정 완료</button>
+            <a th:href="@{/admin/exhibitions/{id}/productions(id=${exhibitionId})}" class="font-bold text-sm text-blue-500 hover:text-blue-800">취소</a>
         </div>
     </form>
 </div>
