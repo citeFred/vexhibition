@@ -1,6 +1,6 @@
 package com.meta.vexhibition.file.domain;
 import com.meta.vexhibition.common.TimeStamped;
-import com.meta.vexhibition.project.domain.Project;
+import com.meta.vexhibition.production.domain.Production;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -29,14 +29,14 @@ public class File extends TimeStamped {
     private Integer displayOrder;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "project_id")
-    private Project project;
+    @JoinColumn(name = "production_id")
+    private Production production;
 
-    public File(String originalFileName, String storedFileName, String path, Project project, Integer displayOrder) {
+    public File(String originalFileName, String storedFileName, String path, Production production, Integer displayOrder) {
         this.originalFileName = originalFileName;
         this.storedFileName = storedFileName;
         this.path = path;
-        this.project = project;
+        this.production = production;
         this.displayOrder = displayOrder;
     }
 }

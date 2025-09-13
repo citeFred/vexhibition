@@ -6,7 +6,7 @@ import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import com.meta.vexhibition.file.domain.File;
 import com.meta.vexhibition.file.repository.FileRepository;
-import com.meta.vexhibition.project.domain.Project;
+import com.meta.vexhibition.production.domain.Production;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -30,7 +30,7 @@ public class FileService {
     private String cloudFrontDomain;
 
     @Transactional
-    public void uploadFile(Project project, MultipartFile multipartFile, int order) {
+    public void uploadFile(Production production, MultipartFile multipartFile, int order) {
         if (multipartFile == null || multipartFile.isEmpty()) {
             throw new IllegalArgumentException("업로드할 파일이 비어 있습니다.");
         }
@@ -58,7 +58,7 @@ public class FileService {
 
         String finalUrl = "https://" + cloudFrontDomain + "/" + storedFileName;
 
-        File fileEntity = new File(originalFileName, storedFileName, finalUrl, project, order);
+        File fileEntity = new File(originalFileName, storedFileName, finalUrl, production, order);
         fileRepository.save(fileEntity);
     }
 

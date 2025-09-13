@@ -1,8 +1,8 @@
 package com.meta.vexhibition.ai.service;
 
 import com.meta.vexhibition.ai.dto.AudioResponseDto;
-import com.meta.vexhibition.project.domain.Project;
-import com.meta.vexhibition.project.repository.ProjectRepository;
+import com.meta.vexhibition.production.domain.Production;
+import com.meta.vexhibition.production.repository.ProductionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.audio.transcription.AudioTranscriptionPrompt;
 import org.springframework.ai.audio.transcription.AudioTranscriptionResponse;
@@ -47,8 +47,8 @@ public class OpenAiService {
     // 대화 기록을 포함하여 AI 응답을 생성하기 위한 인터페이스 직접 사용
     private final ChatModel chatModel;
 
-    // Project 정보 활용을 위한 주입
-    private final ProjectRepository projectRepository;
+    // Production 정보 활용을 위한 주입
+    private final ProductionRepository productionRepository;
 
     @Value("${spring.ai.openai.chat.options.model}")
     private String aiModel;
@@ -191,19 +191,19 @@ public class OpenAiService {
     }
 
     @Transactional(readOnly = true)
-    public byte[] generateDescriptionAudio(Long projectId) {
-        Project project = projectRepository.findById(projectId)
+    public byte[] generateDescriptionAudio(Long productionId) {
+        Production production = productionRepository.findById(productionId)
                 .orElseThrow(() -> new IllegalArgumentException("ID에 해당하는 작품을 찾을 수 없습니다."));
 
-        String description = project.getDescription();
+        String description = production.getDescription();
 
         return this.tts(description);
     }
 
     @Transactional(readOnly = true)
-    public AudioResponseDto generateCreativeDescriptionAudio(Long projectId) {
+    public AudioResponseDto generateCreativeDescriptionAudio(Long productionId) {
         // 텍스트 프롬프트 데이터 가공
-        Project project = projectRepository.findById(projectId)
+        Production production = productionRepository.findById(productionId)
                 .orElseThrow(() -> new IllegalArgumentException("ID에 해당하는 작품을 찾을 수 없습니다."));
 
         String personaSetUp = "당신은 '메타버스 아카데미 수료작품 전시회'의 전문 AI 도슨트 '벡시(Vexi)'입니다. " +
@@ -213,7 +213,7 @@ public class OpenAiService {
                 "환영인사나 자기소개는 생략하고 바로 작품 설명부터 시작해줘. " +
                 "이 작품의 목적과 장점을 잘 분석해서 포함하고, 마지막에는 관람객의 흥미를 유발하는 질문을 던지며 마무리해줘.\n\n" +
                 "--- 원본 설명 ---\n" +
-                project.getDescription();
+                production.getDescription();
 
         String creativeScript = this.generate(personaSetUp, userTaskWithData);
 

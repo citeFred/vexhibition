@@ -40,9 +40,9 @@ public class OpenAiController {
         return new ResponseEntity<>(audioData, headers, HttpStatus.OK);
     }
 
-    @GetMapping("/ai/tts/projects/{projectId}/description-audio")
-    public ResponseEntity<byte[]> getProjectDescriptionAudio(@PathVariable Long projectId) {
-        byte[] audioData = openAIService.generateDescriptionAudio(projectId);
+    @GetMapping("/ai/tts/productions/{productionId}/description-audio")
+    public ResponseEntity<byte[]> getProductionDescriptionAudio(@PathVariable Long productionId) {
+        byte[] audioData = openAIService.generateDescriptionAudio(productionId);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.valueOf("audio/mpeg"));
@@ -51,9 +51,9 @@ public class OpenAiController {
         return new ResponseEntity<>(audioData, headers, HttpStatus.OK);
     }
 
-    @GetMapping("/ai/tts/projects/{projectId}/docent")
-    public ResponseEntity<ApiResponseDto<AudioResponseDto>> getCreativeProjectDescriptionAudio(@PathVariable Long projectId) {
-        AudioResponseDto audioDto = openAIService.generateCreativeDescriptionAudio(projectId);
+    @GetMapping("/ai/tts/productions/{productionId}/docent")
+    public ResponseEntity<ApiResponseDto<AudioResponseDto>> getCreativeProductionDescriptionAudio(@PathVariable Long productionId) {
+        AudioResponseDto audioDto = openAIService.generateCreativeDescriptionAudio(productionId);
 
         ApiResponseDto<AudioResponseDto> response = new ApiResponseDto<>(
                 audioDto,

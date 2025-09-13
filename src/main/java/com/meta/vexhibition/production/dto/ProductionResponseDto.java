@@ -1,8 +1,8 @@
-package com.meta.vexhibition.project.dto;
+package com.meta.vexhibition.production.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.meta.vexhibition.file.dto.FileResponseDto;
-import com.meta.vexhibition.project.domain.Project;
+import com.meta.vexhibition.production.domain.Production;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -13,7 +13,7 @@ import java.util.stream.Collectors; // Collectors import 추가
 
 @Getter
 @NoArgsConstructor
-public class ProjectResponseDto {
+public class ProductionResponseDto {
     private Long id;
     private String teamname;
     private int generation;
@@ -27,17 +27,17 @@ public class ProjectResponseDto {
 
     private List<FileResponseDto> files;
 
-    public ProjectResponseDto(Project project) {
-        this.id = project.getId();
-        this.teamname = project.getTeamname();
-        this.title = project.getTitle();
-        this.generation = project.getGeneration();
-        this.description = project.getDescription();
-        this.createAt = project.getCreatedAt();
-        this.modifiedAt = project.getModifiedAt();
+    public ProductionResponseDto(Production production) {
+        this.id = production.getId();
+        this.teamname = production.getTeamname();
+        this.title = production.getTitle();
+        this.generation = production.getGeneration();
+        this.description = production.getDescription();
+        this.createAt = production.getCreatedAt();
+        this.modifiedAt = production.getModifiedAt();
 
-        if (project.getFiles() != null) {
-            this.files = project.getFiles().stream()
+        if (production.getFiles() != null) {
+            this.files = production.getFiles().stream()
                     .map(FileResponseDto::new)
                     .collect(Collectors.toList());
         } else {

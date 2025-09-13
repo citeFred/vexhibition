@@ -1,7 +1,7 @@
 package com.meta.vexhibition.exhibition.domain;
 
 import com.meta.vexhibition.common.TimeStamped;
-import com.meta.vexhibition.project.domain.Project;
+import com.meta.vexhibition.production.domain.Production;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,7 +24,7 @@ public class Exhibition extends TimeStamped {
     private String title;
 
     @OneToMany(mappedBy = "exhibition", cascade = CascadeType.ALL, orphanRemoval = true)
-    List<Project> projects =  new ArrayList<>();
+    List<Production> productions =  new ArrayList<>();
 
 
     public Exhibition(String title) {

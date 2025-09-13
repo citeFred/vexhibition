@@ -1,4 +1,4 @@
-package com.meta.vexhibition.project.domain;
+package com.meta.vexhibition.production.domain;
 
 import com.meta.vexhibition.common.TimeStamped;
 import com.meta.vexhibition.exhibition.domain.Exhibition;
@@ -14,9 +14,9 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-@Table(name = "project")
+@Table(name = "production")
 @Entity
-public class Project extends TimeStamped {
+public class Production extends TimeStamped {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -37,10 +37,10 @@ public class Project extends TimeStamped {
     @JoinColumn(name = "exhibition_id", nullable = false)
     private Exhibition exhibition;
 
-    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "production", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<File> files = new ArrayList<>();
 
-    public Project(String teamname, String title, int generation, String description, Exhibition exhibition) {
+    public Production(String teamname, String title, int generation, String description, Exhibition exhibition) {
         this.teamname = teamname;
         this.generation = generation;
         this.title = title;

@@ -2,7 +2,7 @@ package com.meta.vexhibition.exhibition.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.meta.vexhibition.exhibition.domain.Exhibition;
-import com.meta.vexhibition.project.dto.ProjectResponseDto;
+import com.meta.vexhibition.production.dto.ProductionResponseDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -19,16 +19,16 @@ public class ExhibitionResponseDto {
     private LocalDateTime createAt;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDateTime modifiedAt;
-    private List<ProjectResponseDto> projects;
+    private List<ProductionResponseDto> productions;
 
     public ExhibitionResponseDto(Exhibition exhibition) {
         this.id = exhibition.getId();
         this.title = exhibition.getTitle();
         this.createAt = exhibition.getCreatedAt();
         this.modifiedAt = exhibition.getModifiedAt();
-        this.projects = exhibition.getProjects()
+        this.productions = exhibition.getProductions()
                 .stream()
-                .map(ProjectResponseDto::new)
+                .map(ProductionResponseDto::new)
                 .collect(Collectors.toList()
                 );
     }

@@ -5,7 +5,7 @@ import com.meta.vexhibition.exhibition.dto.ExhibitionRequestDto;
 import com.meta.vexhibition.exhibition.dto.ExhibitionResponseDto;
 import com.meta.vexhibition.exhibition.repository.ExhibitionRepository;
 import com.meta.vexhibition.file.service.FileService;
-import com.meta.vexhibition.project.domain.Project;
+import com.meta.vexhibition.production.domain.Production;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -58,10 +58,10 @@ public class ExhibitionService {
         Exhibition exhibition = exhibitionRepository.findById(exhibitionId)
                 .orElseThrow(() -> new IllegalArgumentException("ID에 해당하는 전시회를 찾을 수 없습니다."));
 
-        if (exhibition.getProjects() != null && !exhibition.getProjects().isEmpty()) {
-            for (Project project : exhibition.getProjects()) {
-                if (project.getFiles() != null && !project.getFiles().isEmpty()) {
-                    project.getFiles().forEach(file -> {
+        if (exhibition.getProductions() != null && !exhibition.getProductions().isEmpty()) {
+            for (Production production : exhibition.getProductions()) {
+                if (production.getFiles() != null && !production.getFiles().isEmpty()) {
+                    production.getFiles().forEach(file -> {
                         fileService.deleteFile(file.getStoredFileName());
                     });
                 }

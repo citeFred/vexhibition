@@ -4,7 +4,7 @@ import com.meta.vexhibition.common.ApiResponseDto;
 import com.meta.vexhibition.exhibition.dto.ExhibitionRequestDto;
 import com.meta.vexhibition.exhibition.dto.ExhibitionResponseDto;
 import com.meta.vexhibition.exhibition.service.ExhibitionService;
-import com.meta.vexhibition.project.dto.ProjectResponseDto;
+import com.meta.vexhibition.production.dto.ProductionResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,17 +21,17 @@ public class ExhibitionController {
     /**
      * For UnrealEngine Request&Response
      * @param id
-     * @return Project DATA list
+     * @return Production DATA list
      */
     @GetMapping("/exhibitions/{id}/public")
     public ResponseEntity<ApiResponseDto<?>> getPublicExhibitionById(@PathVariable Long id) {
         try {
             ExhibitionResponseDto exhibitionData = exhibitionService.getExhibitionById(id);
 
-            List<ProjectResponseDto> projects = exhibitionData.getProjects();
+            List<ProductionResponseDto> productions = exhibitionData.getProductions();
 
-            ApiResponseDto<List<ProjectResponseDto>> response = new ApiResponseDto<>(
-                    projects,
+            ApiResponseDto<List<ProductionResponseDto>> response = new ApiResponseDto<>(
+                    productions,
                     "프로젝트 목록 조회에 성공했습니다"
             );
 
