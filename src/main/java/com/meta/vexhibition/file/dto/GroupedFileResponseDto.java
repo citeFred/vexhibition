@@ -14,7 +14,7 @@ public class GroupedFileResponseDto {
     private final Long id; // 대표 ID (정적 파일의 ID 또는 GIF 첫 프레임의 ID)
     private final String originalFileName; // 업로드된 원본 파일명 (예: "my_animation.gif")
     private final String type; // 파일 종류: "STATIC" 또는 "ANIMATED"
-    private final List<String> paths; // 파일 경로. STATIC은 1개, ANIMATED는 N개의 URL을 가짐.
+    private final List<String> path; // 파일 경로. STATIC은 1개, ANIMATED는 N개의 URL을 가짐.
     private final Integer displayOrder;
 
     /**
@@ -25,7 +25,7 @@ public class GroupedFileResponseDto {
         this.id = file.getId();
         this.originalFileName = file.getOriginalFileName();
         this.type = "STATIC";
-        this.paths = List.of(file.getPath()); // 경로가 1개인 리스트
+        this.path = List.of(file.getPath()); // 경로가 1개인 리스트
         this.displayOrder = file.getDisplayOrder();
     }
 
@@ -38,7 +38,7 @@ public class GroupedFileResponseDto {
         this.id = firstFrame.getId();
         this.originalFileName = restoreOriginalGifName(firstFrame.getOriginalFileName());
         this.type = "ANIMATED";
-        this.paths = frames.stream().map(File::getPath).collect(Collectors.toList()); // 모든 프레임의 경로 리스트
+        this.path = frames.stream().map(File::getPath).collect(Collectors.toList()); // 모든 프레임의 경로 리스트
         this.displayOrder = firstFrame.getDisplayOrder();
     }
 
