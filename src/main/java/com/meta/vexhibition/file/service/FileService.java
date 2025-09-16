@@ -62,7 +62,7 @@ public class FileService {
     public int uploadGifAsFrames(Production production, MultipartFile gifFile, int startOrder) {
         if (isInvalidFile(gifFile)) return 0;
 
-        final int MAX_FRAMES = 15; // 추출할 최대 프레임 수 정의
+        final int MAX_FRAMES = 30; // 추출할 최대 프레임 수 정의
 
         try {
             final List<BufferedImage> allFrames = Imaging.getAllBufferedImages(gifFile.getInputStream().readAllBytes());
