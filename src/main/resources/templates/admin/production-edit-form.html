@@ -47,15 +47,15 @@
 
                 <!--
                   [수정된 부분]
-                  file.path 대신 file.paths 리스트의 첫 번째 항목([0])을 썸네일로 사용합니다.
-                  정적 이미지는 어차피 paths에 항목이 1개뿐입니다.
+                  file.path 대신 file.path 리스트의 첫 번째 항목([0])을 썸네일로 사용합니다.
+                  정적 이미지는 어차피 path에 항목이 1개뿐입니다.
                 -->
-                <img th:src="${file.paths[0]}" alt="image" class="h-10 w-10 object-cover rounded ml-2">
+                <img th:src="${file.path[0]}" alt="image" class="h-10 w-10 object-cover rounded ml-2">
 
                 <span class="ml-2 text-sm text-gray-600" th:text="${file.originalFileName}"></span>
 
                 <!-- GIF인 경우 프레임 수를 표시해줍니다. -->
-                <span th:if="${file.type == 'ANIMATED'}" class="ml-auto text-xs text-blue-500 bg-blue-100 px-2 py-1 rounded-full" th:text="${#lists.size(file.paths)} + ' frames'"></span>
+                <span th:if="${file.type == 'ANIMATED'}" class="ml-auto text-xs text-blue-500 bg-blue-100 px-2 py-1 rounded-full" th:text="${#lists.size(file.path)} + ' frames'"></span>
             </div>
         </div>
 
