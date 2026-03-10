@@ -7,7 +7,10 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AudioResponseDto {
 
-    // Base64로 인코딩된 오디오 데이터 문자열을 담을 필드
+    // AI가 생성한 도슨트 대본 텍스트
+    private final String script;
+
+    // Base64로 인코딩된 오디오 데이터
     private final String stream;
 
 }
