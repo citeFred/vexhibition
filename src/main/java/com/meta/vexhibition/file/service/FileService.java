@@ -96,6 +96,29 @@ public class FileService {
         }
     }
 
+    /**
+     * PDF 등 문서 파일을 S3에 업로드하고 File 엔티티를 반환합니다.
+     * displayOrder는 문서에 해당하지 않으므로 null로 저장됩니다.
+     */
+    @Transactional
+    public File uploadDocumentFile(Production production, MultipartFile multipartFile) {
+        if (isInvalidFile(multipartFile)) {
+            throw new IllegalArgumentException("파일이 비어있습니다.");
+        }
+
+        String originalFileName = multipartFile.getOriginalFilename();
+        String storedFileName = createStoredFileName(originalFileName);
+
+        try {
+            uploadToS3(storedFileName, multipartFile.getBytes(), multipartFile.getContentType());
+            String finalUrl = "https://" + cloudFrontDomain + "/" + storedFileName;
+            File fileEntity = new File(originalFileName, storedFileName, finalUrl, production, null);
+            return fileRepository.save(fileEntity);
+        } catch (IOException e) {
+            throw new RuntimeException("파일을 바이트 배열로 변환하는 데 실패했습니다.", e);
+        }
+    }
+
     public void deleteFile(String storedFileName) {
         try {
             DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
