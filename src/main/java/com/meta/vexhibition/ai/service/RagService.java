@@ -177,6 +177,21 @@ public class RagService {
         );
     }
 
+    /**
+     * 특정 Production의 PDF 청크 전체를 가져옵니다. (비교 검증용 ground truth 구성)
+     * similarityThreshold=0.0 으로 유사도 필터 없이 메타데이터 필터만 적용합니다.
+     */
+    public List<Document> getAllProductionPdfChunks(Long productionId, String query) {
+        return vectorStore.similaritySearch(
+                SearchRequest.builder()
+                        .query(query)
+                        .topK(200)
+                        .similarityThreshold(0.0)
+                        .filterExpression("productionId == '" + productionId + "' && source == 'pdf'")
+                        .build()
+        );
+    }
+
     // =========================================================================
     // 공통 유틸
     // =========================================================================

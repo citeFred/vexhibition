@@ -237,7 +237,9 @@ public class OpenAiService {
         byte[] audioData = response.getResult().getOutput();
         String base64Audio = Base64.getEncoder().encodeToString(audioData);
 
-        return new AudioResponseDto(creativeScript, base64Audio);
+        double similarity = computeSimilarityWithReference(production, creativeScript);
+
+        return new AudioResponseDto(creativeScript, similarity, base64Audio);
     }
 
     // =========================================================================
@@ -291,6 +293,40 @@ public class OpenAiService {
         byte[] audioData = response.getResult().getOutput();
         String base64Audio = Base64.getEncoder().encodeToString(audioData);
 
-        return new AudioResponseDto(creativeScript, base64Audio);
+        double similarity = computeSimilarityWithReference(production, creativeScript);
+
+        return new AudioResponseDto(creativeScript, similarity, base64Audio);
+    }
+
+    // =========================================================================
+    // 공통 유틸 - Ground Truth 코사인 유사도
+    // =========================================================================
+
+    private double computeSimilarityWithReference(Production production, String script) {
+        String ragQuery = production.getTitle() + " " + production.getDescription();
+        List<org.springframework.ai.document.Document> allPdfChunks =
+                ragService.getAllProductionPdfChunks(production.getId(), ragQuery);
+        String groundTruth = "작품명: " + production.getTitle() + "\n" +
+                "팀명: " + production.getTeamname() + "\n" +
+                "기수: " + production.getGeneration() + "기\n" +
+                "설명: " + production.getDescription() + "\n\n" +
+                ragService.buildContextFromDocuments(allPdfChunks);
+
+        List<float[]> embeddings = this.generateEmbedding(
+                List.of(script, groundTruth),
+                "text-embedding-ada-002"
+        );
+        return cosineSimilarity(embeddings.get(0), embeddings.get(1));
+    }
+
+    private double cosineSimilarity(float[] a, float[] b) {
+        double dot = 0.0, normA = 0.0, normB = 0.0;
+        for (int i = 0; i < a.length; i++) {
+            dot += (double) a[i] * b[i];
+            normA += (double) a[i] * a[i];
+            normB += (double) b[i] * b[i];
+        }
+        if (normA == 0.0 || normB == 0.0) return 0.0;
+        return dot / (Math.sqrt(normA) * Math.sqrt(normB));
     }
 }
