@@ -25,7 +25,7 @@ public class File extends TimeStamped {
     @Column(nullable = false)
     private String path;
 
-    @Column(nullable = false)
+    // 이미지 슬라이드쇼 순서 (PDF 문서의 경우 null)
     private Integer displayOrder;
 
     @ManyToOne(fetch = FetchType.LAZY)
