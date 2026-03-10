@@ -1,5 +1,7 @@
 package com.meta.vexhibition.exhibition.service;
 
+import com.meta.vexhibition.ai.service.RagService;
+import com.meta.vexhibition.document.service.DocumentService;
 import com.meta.vexhibition.exhibition.domain.Exhibition;
 import com.meta.vexhibition.exhibition.dto.ExhibitionRequestDto;
 import com.meta.vexhibition.exhibition.dto.ExhibitionResponseDto;
@@ -18,6 +20,8 @@ import java.util.List;
 public class ExhibitionService {
     private final ExhibitionRepository exhibitionRepository;
     private final FileService fileService;
+    private final DocumentService documentService;
+    private final RagService ragService;
 
     @Transactional
     public ExhibitionResponseDto createExhibition(ExhibitionRequestDto exhibitionRequestDto) {
@@ -31,7 +35,7 @@ public class ExhibitionService {
 
     @Transactional(readOnly = true)
     public List<ExhibitionResponseDto> getExhibitions() {
-        List<ExhibitionResponseDto> exhibitionResponseDtoList = exhibitionRepository.findAllByOrderByCreatedAtDesc()
+        List<ExhibitionResponseDto> exhibitionResponseDtoList = exhibitionRepository.findAll()
                 .stream()
                 .map(ExhibitionResponseDto::new)
                 .toList();
@@ -61,10 +65,10 @@ public class ExhibitionService {
         if (exhibition.getProductions() != null && !exhibition.getProductions().isEmpty()) {
             for (Production production : exhibition.getProductions()) {
                 if (production.getFiles() != null && !production.getFiles().isEmpty()) {
-                    production.getFiles().forEach(file -> {
-                        fileService.deleteFile(file.getStoredFileName());
-                    });
+                    production.getFiles().forEach(file -> fileService.deleteFile(file.getStoredFileName()));
                 }
+                documentService.deleteAllByProductionId(production.getId()); // PDF 문서 + pgvector 청크 삭제
+                ragService.deleteProductionIndex(production.getId());         // description 벡터 인덱스 삭제
             }
         }
         exhibitionRepository.delete(exhibition);

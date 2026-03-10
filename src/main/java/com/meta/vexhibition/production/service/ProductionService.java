@@ -1,5 +1,7 @@
 package com.meta.vexhibition.production.service;
 
+import com.meta.vexhibition.ai.service.RagService;
+import com.meta.vexhibition.document.service.DocumentService;
 import com.meta.vexhibition.exhibition.domain.Exhibition;
 import com.meta.vexhibition.exhibition.repository.ExhibitionRepository;
 import com.meta.vexhibition.file.domain.File;
@@ -28,6 +30,8 @@ public class ProductionService {
     private final ExhibitionRepository exhibitionRepository;
     private final FileService fileService;
     private final FileRepository fileRepository;
+    private final RagService ragService;
+    private final DocumentService documentService;
 
     public ProductionResponseDto createProduction(Long exhibitionId, ProductionRequestDto productionRequestDto, List<MultipartFile> files) {
         Exhibition exhibition = getValidExhibition(exhibitionId);
@@ -59,6 +63,8 @@ public class ProductionService {
             }
         }
 
+        ragService.indexProduction(savedProduction);
+
         return new ProductionResponseDto(savedProduction);
     }
 
@@ -79,6 +85,7 @@ public class ProductionService {
 
         if (addFiles != null && !addFiles.isEmpty()) {
             int maxOrder = production.getFiles().stream()
+                    .filter(f -> f.getDisplayOrder() != null)
                     .mapToInt(File::getDisplayOrder)
                     .max()
                     .orElse(-1);
@@ -97,6 +104,8 @@ public class ProductionService {
                 }
             }
         }
+
+        ragService.indexProduction(production);
 
         return new ProductionResponseDto(production);
     }
@@ -124,11 +133,11 @@ public class ProductionService {
         Production production = getValidExhibitionAndProduction(exhibitionId, productionId);
 
         if (production.getFiles() != null && !production.getFiles().isEmpty()) {
-            production.getFiles().forEach(file -> {
-                fileService.deleteFile(file.getStoredFileName());
-            });
+            production.getFiles().forEach(file -> fileService.deleteFile(file.getStoredFileName()));
         }
 
+        documentService.deleteAllByProductionId(production.getId()); // PDF 문서 + pgvector 청크 삭제
+        ragService.deleteProductionIndex(production.getId());         // description 벡터 인덱스 삭제
         productionRepository.delete(production);
     }
 
