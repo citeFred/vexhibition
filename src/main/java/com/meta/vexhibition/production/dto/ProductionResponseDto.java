@@ -48,7 +48,7 @@ public class ProductionResponseDto {
         // --- 파일 그룹화 로직 ---
         if (production.getFiles() != null && !production.getFiles().isEmpty()) {
             List<File> sortedFiles = production.getFiles().stream()
-                    .sorted(Comparator.comparing(File::getDisplayOrder))
+                    .sorted(Comparator.comparing(File::getDisplayOrder, Comparator.nullsLast(Comparator.naturalOrder())))
                     .collect(Collectors.toList());
 
             List<GroupedFileResponseDto> resultList = new ArrayList<>();
@@ -72,7 +72,7 @@ public class ProductionResponseDto {
             }
 
             // 정적 이미지와 GIF 그룹이 올바른 순서로 정렬되도록 최종 소팅
-            resultList.sort(Comparator.comparing(GroupedFileResponseDto::getDisplayOrder));
+            resultList.sort(Comparator.comparing(GroupedFileResponseDto::getDisplayOrder, Comparator.nullsLast(Comparator.naturalOrder())));
 
             this.files = resultList;
         } else {

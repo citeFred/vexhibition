@@ -50,6 +50,9 @@ public class OpenAiService {
     // Production 정보 활용을 위한 주입
     private final ProductionRepository productionRepository;
 
+    // RAG 서비스
+    private final RagService ragService;
+
     @Value("${spring.ai.openai.chat.options.model}")
     private String aiModel;
 
@@ -232,9 +235,98 @@ public class OpenAiService {
 
         // byte스트림의 BASE64 인코딩
         byte[] audioData = response.getResult().getOutput();
-
         String base64Audio = Base64.getEncoder().encodeToString(audioData);
 
-        return new AudioResponseDto(base64Audio);
+        double similarity = computeSimilarityWithReference(production, creativeScript);
+
+        return new AudioResponseDto(creativeScript, similarity, base64Audio);
+    }
+
+    // =========================================================================
+    // RAG 기반 도슨트 (검증용 - 기존 방식과 비교)
+    // =========================================================================
+
+    @Transactional(readOnly = true)
+    public AudioResponseDto generateCreativeDescriptionAudioWithRag(Long productionId) {
+        Production production = productionRepository.findById(productionId)
+                .orElseThrow(() -> new IllegalArgumentException("ID에 해당하는 작품을 찾을 수 없습니다."));
+
+        String ragQuery = production.getTitle() + " " + production.getDescription();
+
+        // ① 현재 작품의 PDF 발표자료에서 관련 내용 검색
+        List<org.springframework.ai.document.Document> pdfChunks =
+                ragService.searchProductionPdfChunks(productionId, ragQuery);
+        String pdfContext = ragService.buildContextFromDocuments(pdfChunks);
+
+        // ② 유사 작품 description 검색 (자기 자신 제외)
+        List<org.springframework.ai.document.Document> similarDocs =
+                ragService.searchSimilarProductions(ragQuery, productionId);
+        String similarContext = ragService.buildContextFromDocuments(similarDocs);
+
+        String personaSetUp = "당신은 '메타버스 아카데미 수료작품 전시회'의 전문 AI 도슨트 '벡시(Vexi)'입니다. " +
+                "관람객에게 항상 존댓말을 사용하며, 친절하고 흥미로운 톤으로 작품을 설명해야 합니다.";
+
+        String userTaskWithData = "아래 현재 작품 정보와 발표자료 내용, 유사 작품 맥락을 바탕으로 60초 내외의 창의적인 도슨트 안내 대본을 작성해줘. " +
+                "환영인사나 자기소개는 생략하고 바로 작품 설명부터 시작해줘. " +
+                "발표자료 내용이 있다면 그것을 우선 참고하여 이 작품의 목적과 장점을 구체적으로 설명하고, " +
+                "유사 작품과 자연스러운 연관성이 있다면 간략히 언급해줘. " +
+                "마지막에는 관람객의 흥미를 유발하는 질문을 던지며 마무리해줘.\n\n" +
+                "--- 현재 작품 기본 정보 ---\n" +
+                "작품명: " + production.getTitle() + "\n" +
+                "팀명: " + production.getTeamname() + "\n" +
+                "기수: " + production.getGeneration() + "기\n" +
+                "설명: " + production.getDescription() + "\n\n" +
+                "--- 발표자료 내용 (PDF, 우선 참고) ---\n" + pdfContext + "\n\n" +
+                "--- 유사 작품 맥락 (참고용) ---\n" + similarContext;
+
+        String creativeScript = this.generate(personaSetUp, userTaskWithData);
+
+        OpenAiAudioSpeechOptions speechOptions = OpenAiAudioSpeechOptions.builder()
+                .responseFormat(OpenAiAudioApi.SpeechRequest.AudioResponseFormat.MP3)
+                .speed(1.0f)
+                .model(OpenAiAudioApi.TtsModel.TTS_1.value)
+                .build();
+
+        SpeechPrompt prompt = new SpeechPrompt(creativeScript, speechOptions);
+        SpeechResponse response = openAiAudioSpeechModel.call(prompt);
+
+        byte[] audioData = response.getResult().getOutput();
+        String base64Audio = Base64.getEncoder().encodeToString(audioData);
+
+        double similarity = computeSimilarityWithReference(production, creativeScript);
+
+        return new AudioResponseDto(creativeScript, similarity, base64Audio);
+    }
+
+    // =========================================================================
+    // 공통 유틸 - Ground Truth 코사인 유사도
+    // =========================================================================
+
+    private double computeSimilarityWithReference(Production production, String script) {
+        String ragQuery = production.getTitle() + " " + production.getDescription();
+        List<org.springframework.ai.document.Document> allPdfChunks =
+                ragService.getAllProductionPdfChunks(production.getId(), ragQuery);
+        String groundTruth = "작품명: " + production.getTitle() + "\n" +
+                "팀명: " + production.getTeamname() + "\n" +
+                "기수: " + production.getGeneration() + "기\n" +
+                "설명: " + production.getDescription() + "\n\n" +
+                ragService.buildContextFromDocuments(allPdfChunks);
+
+        List<float[]> embeddings = this.generateEmbedding(
+                List.of(script, groundTruth),
+                "text-embedding-ada-002"
+        );
+        return cosineSimilarity(embeddings.get(0), embeddings.get(1));
+    }
+
+    private double cosineSimilarity(float[] a, float[] b) {
+        double dot = 0.0, normA = 0.0, normB = 0.0;
+        for (int i = 0; i < a.length; i++) {
+            dot += (double) a[i] * b[i];
+            normA += (double) a[i] * a[i];
+            normB += (double) b[i] * b[i];
+        }
+        if (normA == 0.0 || normB == 0.0) return 0.0;
+        return dot / (Math.sqrt(normA) * Math.sqrt(normB));
     }
 }

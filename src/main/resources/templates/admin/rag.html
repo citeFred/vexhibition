@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/fragments/layout :: head('RAG 관리')}"></head>
+<body class="bg-gray-50 antialiased">
+<div class="flex h-screen overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside th:replace="~{admin/fragments/layout :: sidebar}"></aside>
+
+    <!-- Main -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-auto">
+        <div th:replace="~{admin/fragments/layout :: toast}"></div>
+
+        <main class="flex-1 p-8">
+
+            <!-- Page Header -->
+            <div class="mb-8">
+                <h1 class="text-2xl font-bold text-gray-900">RAG 관리</h1>
+                <p class="text-gray-500 text-sm mt-0.5">AI 도슨트를 위한 임베딩 인덱스를 관리합니다.</p>
+            </div>
+
+            <!-- Status Cards -->
+            <div class="grid grid-cols-2 gap-5 mb-8">
+                <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+                    <div class="flex items-center justify-between mb-3">
+                        <p class="text-sm font-medium text-gray-500">작품 인덱스</p>
+                        <div class="w-9 h-9 rounded-lg bg-indigo-50 flex items-center justify-center">
+                            <i class="fas fa-database text-indigo-500 text-sm"></i>
+                        </div>
+                    </div>
+                    <p class="text-3xl font-bold text-gray-900" th:text="${totalProductions}">0</p>
+                    <p class="text-xs text-gray-400 mt-1">등록된 작품 (인덱싱 대상)</p>
+                </div>
+                <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm" id="docStatusCard">
+                    <div class="flex items-center justify-between mb-3">
+                        <p class="text-sm font-medium text-gray-500">문서 인덱스 현황</p>
+                        <div class="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center">
+                            <i class="fas fa-file-lines text-emerald-500 text-sm"></i>
+                        </div>
+                    </div>
+                    <p class="text-sm font-medium text-gray-700" id="docStatusText">
+                        <span class="text-gray-400 italic text-xs">조회하려면 아래 버튼을 누르세요</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Action Panels -->
+            <div class="grid grid-cols-2 gap-5 mb-6">
+                <!-- Batch Index -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div class="px-6 py-5 border-b border-gray-100">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-bolt text-indigo-500 text-sm"></i>
+                            </div>
+                            <div>
+                                <h2 class="font-semibold text-gray-900 text-sm">전체 작품 일괄 인덱싱</h2>
+                                <p class="text-xs text-gray-500 mt-0.5">모든 작품 description을 임베딩하여 pgvector에 저장합니다.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="px-6 py-4 flex items-center gap-3">
+                        <button onclick="indexAll()"
+                                class="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors">
+                            <i class="fas fa-play text-xs"></i>
+                            일괄 인덱싱 실행
+                        </button>
+                        <button onclick="getDocStatus()"
+                                class="flex items-center gap-2 px-4 py-2.5 border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm font-medium rounded-xl transition-colors">
+                            <i class="fas fa-arrow-rotate-right text-xs"></i>
+                            인덱스 현황 조회
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Log Panel -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                        <h2 class="font-semibold text-gray-900 text-sm">작업 로그</h2>
+                        <button onclick="clearLog()" class="text-xs text-gray-400 hover:text-gray-600 transition-colors">초기화</button>
+                    </div>
+                    <div id="logArea"
+                         class="px-5 py-4 font-mono text-xs text-gray-600 space-y-1 min-h-[120px] max-h-60 overflow-auto bg-slate-950 text-slate-300">
+                        <p class="text-slate-500 italic">작업을 실행하면 여기에 로그가 표시됩니다.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Per-Exhibition Index -->
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                <div class="px-6 py-5 border-b border-gray-100">
+                    <h2 class="font-semibold text-gray-900">전시회별 작품 인덱싱</h2>
+                    <p class="text-sm text-gray-500 mt-0.5">특정 작품만 개별적으로 인덱싱하거나 삭제할 수 있습니다.</p>
+                </div>
+
+                <!-- Exhibition Accordion -->
+                <div class="divide-y divide-gray-100">
+                    <div th:each="exhibition : ${exhibitions}" class="group">
+                        <!-- Exhibition Header -->
+                        <button type="button"
+                                th:data-id="${exhibition.id}"
+                                onclick="toggleExhibition(this)"
+                                class="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors text-left">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-landmark text-indigo-400 text-xs"></i>
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-900 text-sm" th:text="${exhibition.title}"></p>
+                                    <p class="text-xs text-gray-400"
+                                       th:text="${#lists.size(exhibition.productions)} + '개 작품'"></p>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-down text-gray-400 text-xs transition-transform duration-200 chevron-icon"></i>
+                        </button>
+
+                        <!-- Productions List -->
+                        <div class="hidden production-panel px-6 pb-4 pt-1">
+                            <div th:if="${exhibition.productions.isEmpty()}"
+                                 class="py-4 text-center text-sm text-gray-400">
+                                이 전시회에 등록된 작품이 없습니다.
+                            </div>
+                            <div th:unless="${exhibition.productions.isEmpty()}" class="space-y-2">
+                                <div th:each="production : ${exhibition.productions}"
+                                     class="flex items-center justify-between py-2.5 px-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-800" th:text="${production.title}"></p>
+                                        <p class="text-xs text-gray-500"
+                                           th:text="${production.teamname} + ' · ' + ${production.generation} + '기'"></p>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <button type="button"
+                                                th:data-id="${production.id}"
+                                                th:data-title="${production.title}"
+                                                onclick="indexOne(this.dataset.id, this.dataset.title)"
+                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg transition-colors">
+                                            <i class="fas fa-upload text-xs"></i>
+                                            인덱싱
+                                        </button>
+                                        <button type="button"
+                                                th:data-id="${production.id}"
+                                                th:data-title="${production.title}"
+                                                onclick="deleteIndex(this.dataset.id, this.dataset.title)"
+                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 text-gray-500 hover:text-red-500 hover:border-red-300 text-xs font-medium rounded-lg transition-colors">
+                                            <i class="fas fa-trash-alt text-xs"></i>
+                                            삭제
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<script>
+    // ── Accordion ──
+    function toggleExhibition(btn) {
+        var panel = btn.nextElementSibling;
+        var icon  = btn.querySelector('.chevron-icon');
+        panel.classList.toggle('hidden');
+        icon.style.transform = panel.classList.contains('hidden') ? '' : 'rotate(180deg)';
+    }
+
+    // ── Log ──
+    function log(msg, type) {
+        var area = document.getElementById('logArea');
+        var p = document.createElement('p');
+        var time = new Date().toLocaleTimeString('ko-KR');
+        var color = type === 'success' ? 'text-emerald-400' : type === 'error' ? 'text-red-400' : 'text-slate-300';
+        p.className = color;
+        p.textContent = '[' + time + '] ' + msg;
+        area.appendChild(p);
+        area.scrollTop = area.scrollHeight;
+
+        // Clear placeholder
+        var placeholder = area.querySelector('.italic');
+        if (placeholder) placeholder.remove();
+    }
+    function clearLog() {
+        document.getElementById('logArea').innerHTML =
+            '<p class="text-slate-500 italic">작업을 실행하면 여기에 로그가 표시됩니다.</p>';
+    }
+
+    // ── API Calls ──
+    function indexAll() {
+        log('전체 작품 일괄 인덱싱 시작...', 'info');
+        fetch('/admin/api/rag/index/descriptions', { method: 'POST' })
+            .then(function(r) { return r.text(); })
+            .then(function(t) { log('완료: ' + t, 'success'); })
+            .catch(function(e) { log('오류: ' + e, 'error'); });
+    }
+
+    function indexOne(id, title) {
+        log('인덱싱 시작: ' + title + ' (ID: ' + id + ')', 'info');
+        fetch('/admin/api/rag/index/productions/' + id + '/description', { method: 'POST' })
+            .then(function(r) { return r.text(); })
+            .then(function(t) { log('완료: ' + t, 'success'); })
+            .catch(function(e) { log('오류: ' + e, 'error'); });
+    }
+
+    function deleteIndex(id, title) {
+        if (!confirm('「' + title + '」의 인덱스를 삭제하시겠습니까?')) return;
+        log('인덱스 삭제: ' + title + ' (ID: ' + id + ')', 'info');
+        fetch('/admin/api/rag/index/productions/' + id + '/description', { method: 'DELETE' })
+            .then(function(r) { return r.text(); })
+            .then(function(t) { log('삭제 완료: ' + t, 'success'); })
+            .catch(function(e) { log('오류: ' + e, 'error'); });
+    }
+
+    function getDocStatus() {
+        fetch('/admin/api/rag/index/documents')
+            .then(function(r) { return r.text(); })
+            .then(function(t) {
+                document.getElementById('docStatusText').textContent = t;
+                log('인덱스 현황: ' + t, 'success');
+            })
+            .catch(function(e) { log('현황 조회 오류: ' + e, 'error'); });
+    }
+</script>
+</body>
+</html>

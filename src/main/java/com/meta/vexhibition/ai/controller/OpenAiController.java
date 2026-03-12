@@ -51,6 +51,7 @@ public class OpenAiController {
         return new ResponseEntity<>(audioData, headers, HttpStatus.OK);
     }
 
+    // 기존 방식 - 프롬프트 엔지니어링만 사용
     @GetMapping("/ai/tts/productions/{productionId}/docent")
     public ResponseEntity<ApiResponseDto<AudioResponseDto>> getCreativeProductionDescriptionAudio(@PathVariable Long productionId) {
         AudioResponseDto audioDto = openAIService.generateCreativeDescriptionAudio(productionId);
@@ -60,6 +61,20 @@ public class OpenAiController {
                 "AI 도슨트 음성(Base64) 생성에 성공했습니다."
         );
         System.out.println("AI Audio응답 완료");
+
+        return ResponseEntity.ok(response);
+    }
+
+    // RAG 기반 방식 - 유사 작품 벡터 검색 + 프롬프트 보강
+    @GetMapping("/ai/tts/productions/{productionId}/docent/rag")
+    public ResponseEntity<ApiResponseDto<AudioResponseDto>> getCreativeProductionDescriptionAudioWithRag(@PathVariable Long productionId) {
+        AudioResponseDto audioDto = openAIService.generateCreativeDescriptionAudioWithRag(productionId);
+
+        ApiResponseDto<AudioResponseDto> response = new ApiResponseDto<>(
+                audioDto,
+                "RAG 기반 AI 도슨트 음성(Base64) 생성에 성공했습니다."
+        );
+        System.out.println("RAG AI Audio응답 완료");
 
         return ResponseEntity.ok(response);
     }

@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import java.util.List;
 
 @Controller
-@RequestMapping("/admin") // 모든 관리자 페이지는 /admin 경로로 시작하도록 설정
+@RequestMapping("/admin")
 @RequiredArgsConstructor
 public class AdminController {
 
@@ -20,9 +20,36 @@ public class AdminController {
     @GetMapping
     public String adminMain(Model model) {
         List<ExhibitionResponseDto> exhibitions = exhibitionService.getExhibitions();
-        
+
+        long totalProductions = exhibitions.stream()
+                .mapToLong(e -> e.getProductions().size())
+                .sum();
+        long totalFiles = exhibitions.stream()
+                .flatMap(e -> e.getProductions().stream())
+                .mapToLong(p -> p.getFiles().size())
+                .sum();
+
         model.addAttribute("exhibitions", exhibitions);
+        model.addAttribute("totalExhibitions", exhibitions.size());
+        model.addAttribute("totalProductions", totalProductions);
+        model.addAttribute("totalFiles", totalFiles);
+        model.addAttribute("currentPage", "dashboard");
 
         return "admin/index";
+    }
+
+    @GetMapping("/rag")
+    public String ragManagement(Model model) {
+        List<ExhibitionResponseDto> exhibitions = exhibitionService.getExhibitions();
+
+        long totalProductions = exhibitions.stream()
+                .mapToLong(e -> e.getProductions().size())
+                .sum();
+
+        model.addAttribute("exhibitions", exhibitions);
+        model.addAttribute("totalProductions", totalProductions);
+        model.addAttribute("currentPage", "rag");
+
+        return "admin/rag";
     }
 }
