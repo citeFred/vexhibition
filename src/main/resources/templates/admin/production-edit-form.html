@@ -1,74 +1,183 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>작품 수정</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100">
+<head th:replace="~{admin/fragments/layout :: head('작품 수정')}"></head>
+<body class="bg-gray-50 antialiased">
+<div class="flex h-screen overflow-hidden">
 
-<div class="container mx-auto mt-10 p-8 bg-white shadow-md rounded-lg max-w-2xl">
-    <h1 class="text-3xl font-bold text-gray-800 mb-6">작품 수정</h1>
+    <!-- Sidebar -->
+    <aside th:replace="~{admin/fragments/layout :: sidebar}"></aside>
 
-    <form th:action="@{/admin/exhibitions/{exhibitionId}/productions/{productionId}/edit(exhibitionId=${exhibitionId}, productionId=${productionDto.id})}"
-          th:object="${productionDto}"
-          method="post"
-          enctype="multipart/form-data">
+    <!-- Main -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-auto">
+        <div th:replace="~{admin/fragments/layout :: toast}"></div>
 
-        <!-- title, teamname, generation, description 등 텍스트 입력 필드들 -->
-        <div class="mb-4">
-            <label for="teamname" class="block text-gray-700 text-sm font-bold mb-2">팀명</label>
-            <input type="text" id="teamname" th:field="*{teamname}" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700">
-        </div>
-        <div class="mb-4">
-            <label for="generation" class="block text-gray-700 text-sm font-bold mb-2">기수</label>
-            <input type="number" id="generation" th:field="*{generation}" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700">
-        </div>
-        <div class="mb-4">
-            <label for="title" class="block text-gray-700 text-sm font-bold mb-2">작품 제목</label>
-            <input type="text" id="title" th:field="*{title}" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700">
-        </div>
-        <div class="mb-6">
-            <label for="description" class="block text-gray-700 text-sm font-bold mb-2">작품 설명</label>
-            <textarea id="description" th:field="*{description}" rows="5" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700"></textarea>
-        </div>
+        <main class="flex-1 p-8">
 
-
-        <!-- 기존 파일 관리 -->
-        <div class="mb-6">
-            <label class="block text-gray-700 text-sm font-bold mb-2">기존 파일 관리 (삭제할 파일 선택)</label>
-            <!-- th:each의 file 변수는 이제 GroupedFileResponseDto 입니다. -->
-            <div th:each="file : *{files}" class="flex items-center mt-2 p-2 border rounded-md">
-                <!--
-                  GIF의 경우 대표 ID(첫 프레임 ID)만 전송됩니다.
-                  서버에서 이 ID를 보고 나머지 프레임도 함께 삭제하도록 처리합니다.
-                -->
-                <input type="checkbox" name="deleteFileIds" th:value="${file.id}" class="h-4 w-4">
-
-                <!--
-                  [수정된 부분]
-                  file.path 대신 file.path 리스트의 첫 번째 항목([0])을 썸네일로 사용합니다.
-                  정적 이미지는 어차피 path에 항목이 1개뿐입니다.
-                -->
-                <img th:src="${file.path[0]}" alt="image" class="h-10 w-10 object-cover rounded ml-2">
-
-                <span class="ml-2 text-sm text-gray-600" th:text="${file.originalFileName}"></span>
-
-                <!-- GIF인 경우 프레임 수를 표시해줍니다. -->
-                <span th:if="${file.type == 'ANIMATED'}" class="ml-auto text-xs text-blue-500 bg-blue-100 px-2 py-1 rounded-full" th:text="${#lists.size(file.path)} + ' frames'"></span>
+            <!-- Breadcrumb -->
+            <div class="flex items-center gap-2 text-sm text-gray-500 mb-6">
+                <a href="/admin" class="hover:text-indigo-600 transition-colors">대시보드</a>
+                <i class="fas fa-chevron-right text-xs text-gray-300"></i>
+                <a th:href="@{/admin/exhibitions/{id}/productions(id=${exhibitionId})}"
+                   class="hover:text-indigo-600 transition-colors">작품 목록</a>
+                <i class="fas fa-chevron-right text-xs text-gray-300"></i>
+                <span class="text-gray-700 font-medium" th:text="${productionDto.title}">작품 수정</span>
             </div>
-        </div>
 
-        <div class="mb-6">
-            <label for="addFiles" class="block text-gray-700 text-sm font-bold mb-2">새 이미지 파일 추가</label>
-            <input type="file" id="addFiles" name="addFiles" multiple class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
-        </div>
+            <!-- Form Card -->
+            <div class="max-w-2xl bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                <!-- Header -->
+                <div class="px-8 py-6 border-b border-gray-100">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
+                            <i class="fas fa-pen-to-square text-amber-500"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-lg font-bold text-gray-900">작품 수정</h1>
+                            <p class="text-sm text-gray-500" th:text="${productionDto.title}"></p>
+                        </div>
+                    </div>
+                </div>
 
-        <div class="flex items-center justify-between">
-            <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">수정 완료</button>
-            <a th:href="@{/admin/exhibitions/{id}/productions(id=${exhibitionId})}" class="font-bold text-sm text-blue-500 hover:text-blue-800">취소</a>
-        </div>
-    </form>
+                <!-- Form Body -->
+                <form th:action="@{/admin/exhibitions/{eid}/productions/{pid}/edit(eid=${exhibitionId}, pid=${productionDto.id})}"
+                      th:object="${productionDto}"
+                      method="post"
+                      enctype="multipart/form-data"
+                      class="px-8 py-6 space-y-5">
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="teamname" class="block text-sm font-semibold text-gray-700 mb-1.5">팀명</label>
+                            <input type="text" id="teamname" th:field="*{teamname}"
+                                   class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow">
+                        </div>
+                        <div>
+                            <label for="generation" class="block text-sm font-semibold text-gray-700 mb-1.5">기수</label>
+                            <input type="number" id="generation" th:field="*{generation}"
+                                   class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="title" class="block text-sm font-semibold text-gray-700 mb-1.5">작품 제목</label>
+                        <input type="text" id="title" th:field="*{title}"
+                               class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow">
+                    </div>
+
+                    <div>
+                        <label for="description" class="block text-sm font-semibold text-gray-700 mb-1.5">작품 설명</label>
+                        <textarea id="description" th:field="*{description}" rows="5"
+                                  class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow resize-none"
+                                  placeholder="작품 설명을 입력하세요. AI 도슨트에서 활용됩니다."></textarea>
+                    </div>
+
+                    <!-- Current Files -->
+                    <div th:if="${!productionDto.files.isEmpty()}">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            현재 파일
+                            <span class="text-xs font-normal text-gray-400 ml-1">삭제할 파일을 선택하세요</span>
+                        </label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <label th:each="file : *{files}"
+                                   class="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:border-red-300 hover:bg-red-50 transition-colors"
+                                   onclick="this.classList.toggle('border-red-400'); this.classList.toggle('bg-red-50')">
+                                <input type="checkbox" name="deleteFileIds" th:value="${file.id}"
+                                       class="w-4 h-4 accent-red-500 flex-shrink-0"
+                                       onclick="event.stopPropagation()">
+                                <img th:src="${file.path[0]}" alt="파일 미리보기"
+                                     class="w-10 h-10 object-cover rounded-lg border border-gray-200 flex-shrink-0">
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-xs font-medium text-gray-700 truncate" th:text="${file.originalFileName}"></p>
+                                    <div class="flex items-center gap-1.5 mt-0.5">
+                                        <span th:if="${file.type == 'ANIMATED'}"
+                                              class="text-xs bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full font-medium"
+                                              th:text="${#lists.size(file.path)} + ' frames'"></span>
+                                        <span th:if="${file.type == 'STATIC'}"
+                                              class="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full font-medium">이미지</span>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Add New Files -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1.5">새 파일 추가</label>
+                        <div id="editDropZone"
+                             class="drop-zone rounded-xl p-5 text-center cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors"
+                             onclick="document.getElementById('addFiles').click()"
+                             ondragover="event.preventDefault(); this.classList.add('drag-over')"
+                             ondragleave="this.classList.remove('drag-over')"
+                             ondrop="handleEditDrop(event)">
+                            <i class="fas fa-plus-circle text-2xl text-gray-300 mb-1"></i>
+                            <p class="text-sm font-medium text-gray-600">클릭 또는 드래그로 파일 추가</p>
+                            <p class="text-xs text-gray-400 mt-0.5">PNG, JPG, GIF 지원</p>
+                        </div>
+                        <input type="file" id="addFiles" name="addFiles" multiple class="hidden"
+                               onchange="showEditPreviews(this.files)">
+                        <div id="editPreviewGrid" class="grid grid-cols-4 gap-3 mt-3 hidden"></div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex items-center gap-3 pt-3 border-t border-gray-100">
+                        <button type="submit"
+                                class="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm transition-colors">
+                            <i class="fas fa-check"></i>
+                            수정 완료
+                        </button>
+                        <a th:href="@{/admin/exhibitions/{id}/productions(id=${exhibitionId})}"
+                           class="px-5 py-3 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors">
+                            취소
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+        </main>
+    </div>
 </div>
+
+<script>
+    function handleEditDrop(e) {
+        e.preventDefault();
+        document.getElementById('editDropZone').classList.remove('drag-over');
+        document.getElementById('addFiles').files = e.dataTransfer.files;
+        showEditPreviews(e.dataTransfer.files);
+    }
+
+    function showEditPreviews(files) {
+        var grid = document.getElementById('editPreviewGrid');
+        grid.innerHTML = '';
+        if (!files || files.length === 0) { grid.classList.add('hidden'); return; }
+        grid.classList.remove('hidden');
+
+        Array.from(files).forEach(function(file) {
+            var wrapper = document.createElement('div');
+            wrapper.className = 'relative rounded-lg overflow-hidden border border-gray-200 bg-gray-50 aspect-square';
+
+            if (file.type.startsWith('image/')) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    var img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.className = 'w-full h-full object-cover';
+                    wrapper.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            }
+
+            var label = document.createElement('div');
+            label.className = 'absolute bottom-0 inset-x-0 bg-black/40 text-white text-xs px-1.5 py-0.5 truncate';
+            label.textContent = file.name;
+            wrapper.appendChild(label);
+
+            grid.appendChild(wrapper);
+        });
+
+        document.getElementById('editDropZone').innerHTML =
+            '<i class="fas fa-check-circle text-xl text-emerald-400 mb-1"></i>' +
+            '<p class="text-sm font-medium text-gray-700">' + files.length + '개 파일 선택됨</p>';
+    }
+</script>
 </body>
 </html>

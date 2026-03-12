@@ -1,73 +1,142 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>VEXPO 전시회 관리</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-</head>
-<body class="bg-gray-100">
+<head th:replace="~{admin/fragments/layout :: head('대시보드')}"></head>
+<body class="bg-gray-50 antialiased">
+<div class="flex h-screen overflow-hidden">
 
-<div class="container mx-auto mt-10 px-4">
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
-        <div>
-            <h1 class="text-3xl font-bold text-gray-800">VEXPO 전시회 관리</h1>
-            <p class="text-gray-500 mt-1">전시회를 선택하여 작품을 관리하세요.</p>
-        </div>
-        <a th:href="@{/admin/exhibitions/new}"
-           class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105 mt-4 sm:mt-0">
-            <i class="fas fa-plus mr-2"></i>새 전시회 추가
-        </a>
-    </div>
+    <!-- Sidebar -->
+    <aside th:replace="~{admin/fragments/layout :: sidebar}"></aside>
 
-    <!-- 전시회 목록을 카드로 표시하는 영역 -->
-    <div class="bg-white shadow-md rounded-lg p-6">
-        <h2 class="text-2xl font-semibold mb-6 text-gray-700">전시회 목록</h2>
+    <!-- Main -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-auto">
+        <div th:replace="~{admin/fragments/layout :: toast}"></div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <main class="flex-1 p-8">
 
-            <!-- th:each를 사용하여 exhibitions 리스트를 반복하여 카드를 생성 -->
-            <div th:each="exhibition : ${exhibitions}" class="bg-white rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-1 transition-transform duration-300 border border-gray-200 flex flex-col">
-                <!-- [수정] 카드 내용 부분에 최소 높이를 지정하여 디자인 일관성 유지 -->
-                <div class="p-6 flex-grow min-h-[11rem]">
-                    <div class="flex items-start mb-4">
-                        <i class="fas fa-landmark text-2xl text-blue-500 mr-3 mt-1"></i>
-                        <!-- [수정] h3 태그에서 truncate 클래스 제거하고 break-words 추가 -->
-                        <h3 class="font-bold text-xl text-gray-800 break-words" th:text="${exhibition.title}">메타버스 아카데미 5기 수료작품 전시회</h3>
+            <!-- Page Header -->
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">전시회 대시보드</h1>
+                    <p class="text-gray-500 text-sm mt-0.5">전시회와 작품을 한눈에 관리하세요.</p>
+                </div>
+                <a th:href="@{/admin/exhibitions/new}"
+                   class="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm transition-colors">
+                    <i class="fas fa-plus text-xs"></i>
+                    새 전시회 추가
+                </a>
+            </div>
+
+            <!-- Stats -->
+            <div class="grid grid-cols-3 gap-5 mb-8">
+                <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+                    <div class="flex items-center justify-between mb-3">
+                        <p class="text-sm font-medium text-gray-500">전시회</p>
+                        <div class="w-9 h-9 rounded-lg bg-indigo-50 flex items-center justify-center">
+                            <i class="fas fa-landmark text-indigo-500 text-sm"></i>
+                        </div>
                     </div>
-                    <p class="text-sm text-gray-500">
-                        <span class="font-semibold">ID:</span>
-                        <span th:text="${exhibition.id}">1</span>
-                    </p>
-                    <p class="text-sm text-gray-500 mt-1">
-                        <span class="font-semibold">생성일:</span>
-                        <span th:text="${#temporals.format(exhibition.createAt, 'yyyy-MM-dd HH:mm')}">2025-08-10</span>
-                    </p>
+                    <p class="text-3xl font-bold text-gray-900" th:text="${totalExhibitions}">0</p>
+                    <p class="text-xs text-gray-400 mt-1">등록된 전시회 수</p>
                 </div>
-
-                <!-- 카드 하단의 관리 버튼 영역 -->
-                <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-between items-center">
-                    <a th:href="@{/admin/exhibitions/{id}/productions(id=${exhibition.id})}"
-                       class="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">
-                        <i class="fas fa-tasks mr-1"></i>작품 관리
-                    </a>
-                    <a th:href="@{/admin/exhibitions/{id}/delete(id=${exhibition.id})}"
-                       onclick="return confirm('정말로 이 전시회를 삭제하시겠습니까? 전시회에 속한 모든 작품과 파일이 영구적으로 삭제됩니다.')"
-                       class="text-sm font-semibold text-red-600 hover:text-red-800 transition-colors">
-                        <i class="fas fa-trash-alt mr-1"></i>삭제
-                    </a>
+                <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+                    <div class="flex items-center justify-between mb-3">
+                        <p class="text-sm font-medium text-gray-500">작품</p>
+                        <div class="w-9 h-9 rounded-lg bg-violet-50 flex items-center justify-center">
+                            <i class="fas fa-palette text-violet-500 text-sm"></i>
+                        </div>
+                    </div>
+                    <p class="text-3xl font-bold text-gray-900" th:text="${totalProductions}">0</p>
+                    <p class="text-xs text-gray-400 mt-1">등록된 작품 합계</p>
+                </div>
+                <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+                    <div class="flex items-center justify-between mb-3">
+                        <p class="text-sm font-medium text-gray-500">파일</p>
+                        <div class="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center">
+                            <i class="fas fa-images text-emerald-500 text-sm"></i>
+                        </div>
+                    </div>
+                    <p class="text-3xl font-bold text-gray-900" th:text="${totalFiles}">0</p>
+                    <p class="text-xs text-gray-400 mt-1">업로드된 파일 합계</p>
                 </div>
             </div>
 
-            <!-- 만약 전시회가 없다면 표시할 메시지 -->
-            <div th:if="${exhibitions.isEmpty()}" class="col-span-full flex flex-col items-center justify-center p-10 bg-gray-50 rounded-lg">
-                <i class="fas fa-folder-open text-4xl text-gray-400 mb-4"></i>
-                <p class="text-center text-gray-500">생성된 전시회가 없습니다.</p>
-                <p class="text-center text-gray-400 text-sm mt-1">'새 전시회 추가' 버튼을 눌러 시작해보세요.</p>
+            <!-- Exhibition List Card -->
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+                <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                    <h2 class="font-semibold text-gray-900">전시회 목록</h2>
+                    <span class="text-sm text-gray-400" th:text="${totalExhibitions} + '개'"></span>
+                </div>
+
+                <!-- Empty state -->
+                <div th:if="${exhibitions.isEmpty()}" class="flex flex-col items-center py-16 text-center">
+                    <div class="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mb-4">
+                        <i class="fas fa-folder-open text-2xl text-gray-400"></i>
+                    </div>
+                    <p class="text-gray-700 font-medium">등록된 전시회가 없습니다</p>
+                    <p class="text-gray-400 text-sm mt-1 mb-5">아래 버튼을 눌러 첫 전시회를 추가해보세요.</p>
+                    <a th:href="@{/admin/exhibitions/new}"
+                       class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">
+                        <i class="fas fa-plus text-xs"></i> 새 전시회 추가
+                    </a>
+                </div>
+
+                <!-- Cards Grid -->
+                <div th:unless="${exhibitions.isEmpty()}"
+                     class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-6">
+                    <div th:each="exhibition : ${exhibitions}"
+                         class="group relative bg-white border border-gray-200 rounded-xl p-5 hover:border-indigo-200 hover:shadow-md transition-all duration-200 flex flex-col overflow-hidden">
+                        <!-- Hover accent -->
+                        <div class="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-indigo-500 to-violet-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
+                        <!-- Icon + Title -->
+                        <div class="flex items-start gap-3 mb-4">
+                            <div class="w-10 h-10 rounded-lg bg-indigo-50 group-hover:bg-indigo-100 flex items-center justify-center flex-shrink-0 transition-colors">
+                                <i class="fas fa-landmark text-indigo-500 text-sm"></i>
+                            </div>
+                            <h3 class="font-semibold text-gray-900 text-sm leading-snug break-words pt-1"
+                                th:text="${exhibition.title}">전시회 제목</h3>
+                        </div>
+
+                        <!-- Meta -->
+                        <div class="space-y-1.5 flex-grow mb-4">
+                            <div class="flex items-center gap-2 text-xs text-gray-500">
+                                <i class="fas fa-hashtag w-3 text-center text-gray-300"></i>
+                                <span th:text="'ID ' + ${exhibition.id}"></span>
+                            </div>
+                            <div class="flex items-center gap-2 text-xs text-gray-500">
+                                <i class="fas fa-palette w-3 text-center text-gray-300"></i>
+                                <span th:text="${#lists.size(exhibition.productions)} + '개 작품'"></span>
+                            </div>
+                            <div class="flex items-center gap-2 text-xs text-gray-500">
+                                <i class="fas fa-calendar-alt w-3 text-center text-gray-300"></i>
+                                <span th:text="${#temporals.format(exhibition.createAt, 'yyyy-MM-dd')}"></span>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="flex items-center justify-between pt-3 border-t border-gray-100">
+                            <a th:href="@{/admin/exhibitions/{id}/productions(id=${exhibition.id})}"
+                               class="flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">
+                                <i class="fas fa-pen-to-square"></i>
+                                작품 관리
+                            </a>
+                            <button type="button"
+                                    th:data-title="${exhibition.title}"
+                                    th:data-href="@{/admin/exhibitions/{id}/delete(id=${exhibition.id})}"
+                                    onclick="var t=this.dataset.title; showDeleteModal('전시회 삭제', '「'+t+'」 전시회를 삭제합니다. 모든 작품과 파일이 영구 삭제됩니다.', this.dataset.href)"
+                                    class="flex items-center gap-1.5 text-xs font-medium text-gray-400 hover:text-red-500 transition-colors cursor-pointer">
+                                <i class="fas fa-trash-alt"></i>
+                                삭제
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
+
+        </main>
     </div>
 </div>
 
+<div th:replace="~{admin/fragments/layout :: deleteModal}"></div>
 </body>
 </html>
