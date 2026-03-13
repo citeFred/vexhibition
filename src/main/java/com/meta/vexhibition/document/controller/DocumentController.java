@@ -18,11 +18,11 @@ public class DocumentController {
     private final DocumentService documentService;
 
     @PostMapping("/exhibitions/{exhibitionId}/productions/{productionId}/documents")
-    public ResponseEntity<DocumentResponseDto> uploadDocument(
+    public ResponseEntity<List<DocumentResponseDto>> uploadDocuments(
             @PathVariable Long exhibitionId,
             @PathVariable Long productionId,
-            @RequestParam("file") MultipartFile file) {
-        DocumentResponseDto response = documentService.uploadAndIndex(exhibitionId, productionId, file);
+            @RequestParam("files") List<MultipartFile> files) {
+        List<DocumentResponseDto> response = documentService.uploadAndIndexAll(exhibitionId, productionId, files);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

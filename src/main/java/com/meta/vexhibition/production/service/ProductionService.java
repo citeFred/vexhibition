@@ -49,15 +49,19 @@ public class ProductionService {
             int currentOrder = 0;
             for (MultipartFile file : files) {
                 if (file != null && !file.isEmpty()) {
-                    // 파일의 ContentType을 확인하여 GIF인지 판별
-                    if (Objects.equals(file.getContentType(), "image/gif")) {
-                        // GIF 파일이면 프레임으로 분할하여 업로드
+                    String contentType = file.getContentType();
+                    if (Objects.equals(contentType, "image/gif")) {
+                        // GIF → 프레임 분할 업로드
                         int frameCount = fileService.uploadGifAsFrames(savedProduction, file, currentOrder);
-                        currentOrder += frameCount; // 생성된 프레임 수만큼 순서 증가
+                        currentOrder += frameCount;
+                    } else if (Objects.equals(contentType, "application/pdf")) {
+                        // PDF → 페이지별 PNG 이미지 변환 업로드 (패널 전시용)
+                        int pageCount = fileService.uploadPdfAsImages(savedProduction, file, currentOrder);
+                        currentOrder += pageCount;
                     } else {
-                        // 일반 이미지 파일이면 그대로 업로드
+                        // 일반 이미지 (JPG, PNG 등) → 그대로 업로드
                         fileService.uploadFile(savedProduction, file, currentOrder);
-                        currentOrder++; // 순서 1 증가
+                        currentOrder++;
                     }
                 }
             }
@@ -94,9 +98,13 @@ public class ProductionService {
 
             for (MultipartFile file : addFiles) {
                 if (file != null && !file.isEmpty()) {
-                    if (Objects.equals(file.getContentType(), "image/gif")) {
+                    String contentType = file.getContentType();
+                    if (Objects.equals(contentType, "image/gif")) {
                         int frameCount = fileService.uploadGifAsFrames(production, file, currentOrder);
                         currentOrder += frameCount;
+                    } else if (Objects.equals(contentType, "application/pdf")) {
+                        int pageCount = fileService.uploadPdfAsImages(production, file, currentOrder);
+                        currentOrder += pageCount;
                     } else {
                         fileService.uploadFile(production, file, currentOrder);
                         currentOrder++;

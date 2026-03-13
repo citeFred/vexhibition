@@ -38,8 +38,27 @@ public class AdminProductionController {
                                 @ModelAttribute ProductionRequestDto productionRequestDto,
                                 @RequestParam("files") List<MultipartFile> files,
                                 RedirectAttributes redirectAttributes) {
-        productionService.createProduction(exhibitionId, productionRequestDto, files);
-        redirectAttributes.addFlashAttribute("successMessage", "작품이 성공적으로 등록되었습니다.");
+        ProductionResponseDto savedProduction = productionService.createProduction(exhibitionId, productionRequestDto, files);
+        return "redirect:/admin/exhibitions/" + exhibitionId + "/productions/" + savedProduction.getId() + "/knowledge";
+    }
+
+    @GetMapping("/{productionId}/knowledge")
+    public String showKnowledgePage(@PathVariable Long exhibitionId,
+                                    @PathVariable Long productionId,
+                                    Model model) {
+        ProductionResponseDto productionDto = productionService.getProductionById(exhibitionId, productionId);
+        model.addAttribute("productionDto", productionDto);
+        model.addAttribute("exhibitionId", exhibitionId);
+        model.addAttribute("currentPage", "dashboard");
+        return "admin/production-knowledge";
+    }
+
+    @GetMapping("/{productionId}/knowledge/skip")
+    public String skipKnowledge(@PathVariable Long exhibitionId,
+                                @PathVariable Long productionId,
+                                RedirectAttributes redirectAttributes) {
+        redirectAttributes.addFlashAttribute("successMessage",
+                "작품이 등록되었습니다. 작품 설명을 기반으로 AI 도슨트가 해설합니다.");
         return "redirect:/admin/exhibitions/" + exhibitionId + "/productions";
     }
 

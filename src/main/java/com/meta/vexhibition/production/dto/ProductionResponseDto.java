@@ -45,10 +45,11 @@ public class ProductionResponseDto {
             this.exhibitionTitle = production.getExhibition().getTitle();
         }
 
-        // --- 파일 그룹화 로직 ---
+        // --- 파일 그룹화 로직 (displayOrder == null인 RAG 문서 파일 제외) ---
         if (production.getFiles() != null && !production.getFiles().isEmpty()) {
             List<File> sortedFiles = production.getFiles().stream()
-                    .sorted(Comparator.comparing(File::getDisplayOrder, Comparator.nullsLast(Comparator.naturalOrder())))
+                    .filter(f -> f.getDisplayOrder() != null)
+                    .sorted(Comparator.comparing(File::getDisplayOrder))
                     .collect(Collectors.toList());
 
             List<GroupedFileResponseDto> resultList = new ArrayList<>();

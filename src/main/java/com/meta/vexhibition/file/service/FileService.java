@@ -5,6 +5,9 @@ import com.meta.vexhibition.file.repository.FileRepository;
 import com.meta.vexhibition.production.domain.Production;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.imaging.Imaging;
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -93,6 +96,40 @@ public class FileService {
             return savedFrameCount;
         } catch (Exception e) {
             throw new RuntimeException("GIF 파일을 PNG 프레임으로 분할하는 데 실패했습니다.", e);
+        }
+    }
+
+    /**
+     * PDF 파일의 각 페이지를 PNG 이미지로 변환하여 업로드합니다. (작품 패널 전시용)
+     * 파일명 규칙: {원본파일명}_panel_{페이지번호}.png (1-indexed)
+     *
+     * @return 변환·저장된 페이지(이미지) 수
+     */
+    @Transactional
+    public int uploadPdfAsImages(Production production, MultipartFile pdfFile, int startOrder) {
+        if (isInvalidFile(pdfFile)) return 0;
+
+        try (PDDocument document = Loader.loadPDF(pdfFile.getBytes())) {
+            PDFRenderer renderer = new PDFRenderer(document);
+            int pageCount = document.getNumberOfPages();
+            String baseName = stripExtension(pdfFile.getOriginalFilename());
+
+            for (int i = 0; i < pageCount; i++) {
+                BufferedImage image = renderer.renderImageWithDPI(i, 150);
+
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                ImageIO.write(image, "png", baos);
+                byte[] pngBytes = baos.toByteArray();
+
+                String panelFileName = baseName + "_panel_" + (i + 1) + ".png";
+                String storedFileName = createStoredFileName(panelFileName);
+
+                uploadToS3(storedFileName, pngBytes, "image/png");
+                saveFileEntity(production, panelFileName, storedFileName, startOrder + i);
+            }
+            return pageCount;
+        } catch (IOException e) {
+            throw new RuntimeException("PDF 파일을 이미지로 변환하는 데 실패했습니다.", e);
         }
     }
 

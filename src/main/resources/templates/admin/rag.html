@@ -89,8 +89,8 @@
             <!-- Per-Exhibition Index -->
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                 <div class="px-6 py-5 border-b border-gray-100">
-                    <h2 class="font-semibold text-gray-900">전시회별 작품 인덱싱</h2>
-                    <p class="text-sm text-gray-500 mt-0.5">특정 작품만 개별적으로 인덱싱하거나 삭제할 수 있습니다.</p>
+                    <h2 class="font-semibold text-gray-900">전시회별 작품 관리</h2>
+                    <p class="text-sm text-gray-500 mt-0.5">작품 description 인덱싱과 발표 자료(PDF) 지식을 관리합니다.</p>
                 </div>
 
                 <!-- Exhibition Accordion -->
@@ -115,36 +115,71 @@
                         </button>
 
                         <!-- Productions List -->
-                        <div class="hidden production-panel px-6 pb-4 pt-1">
+                        <div class="hidden production-panel px-6 pb-5 pt-2">
                             <div th:if="${exhibition.productions.isEmpty()}"
                                  class="py-4 text-center text-sm text-gray-400">
                                 이 전시회에 등록된 작품이 없습니다.
                             </div>
-                            <div th:unless="${exhibition.productions.isEmpty()}" class="space-y-2">
+                            <div th:unless="${exhibition.productions.isEmpty()}" class="space-y-3">
                                 <div th:each="production : ${exhibition.productions}"
-                                     class="flex items-center justify-between py-2.5 px-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
-                                    <div>
-                                        <p class="text-sm font-medium text-gray-800" th:text="${production.title}"></p>
-                                        <p class="text-xs text-gray-500"
-                                           th:text="${production.teamname} + ' · ' + ${production.generation} + '기'"></p>
+                                     th:data-exhibition-id="${exhibition.id}"
+                                     th:data-production-id="${production.id}"
+                                     class="border border-gray-200 rounded-xl overflow-hidden">
+
+                                    <!-- 작품 헤더 행 -->
+                                    <div class="flex items-center justify-between py-3 px-4 bg-gray-50">
+                                        <div>
+                                            <p class="text-sm font-semibold text-gray-800" th:text="${production.title}"></p>
+                                            <p class="text-xs text-gray-500"
+                                               th:text="${production.teamname} + ' · ' + ${production.generation} + '기'"></p>
+                                        </div>
+                                        <!-- Description 인덱싱 버튼 -->
+                                        <div class="flex items-center gap-2">
+                                            <button type="button"
+                                                    th:data-id="${production.id}"
+                                                    th:data-title="${production.title}"
+                                                    onclick="indexOne(this.dataset.id, this.dataset.title)"
+                                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg transition-colors"
+                                                    title="설명 텍스트 인덱싱">
+                                                <i class="fas fa-upload text-xs"></i>
+                                                설명 인덱싱
+                                            </button>
+                                            <button type="button"
+                                                    th:data-id="${production.id}"
+                                                    th:data-title="${production.title}"
+                                                    onclick="deleteIndex(this.dataset.id, this.dataset.title)"
+                                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 text-gray-500 hover:text-red-500 hover:border-red-300 text-xs font-medium rounded-lg transition-colors"
+                                                    title="설명 인덱스 삭제">
+                                                <i class="fas fa-trash-alt text-xs"></i>
+                                                설명 삭제
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div class="flex items-center gap-2">
-                                        <button type="button"
-                                                th:data-id="${production.id}"
-                                                th:data-title="${production.title}"
-                                                onclick="indexOne(this.dataset.id, this.dataset.title)"
-                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg transition-colors">
-                                            <i class="fas fa-upload text-xs"></i>
-                                            인덱싱
-                                        </button>
-                                        <button type="button"
-                                                th:data-id="${production.id}"
-                                                th:data-title="${production.title}"
-                                                onclick="deleteIndex(this.dataset.id, this.dataset.title)"
-                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 text-gray-500 hover:text-red-500 hover:border-red-300 text-xs font-medium rounded-lg transition-colors">
-                                            <i class="fas fa-trash-alt text-xs"></i>
-                                            삭제
-                                        </button>
+
+                                    <!-- PDF 문서 섹션 -->
+                                    <div class="px-4 py-3 bg-white">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                                                <i class="fas fa-file-pdf text-indigo-400 mr-1"></i>발표 자료 / 지식 문서
+                                            </p>
+                                            <label th:for="'pdf-upload-' + ${production.id}"
+                                                   class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-lg cursor-pointer transition-colors">
+                                                <i class="fas fa-plus text-xs"></i>
+                                                PDF 추가
+                                            </label>
+                                            <input type="file"
+                                                   th:id="'pdf-upload-' + ${production.id}"
+                                                   multiple accept=".pdf,application/pdf"
+                                                   class="hidden"
+                                                   th:data-exhibition-id="${exhibition.id}"
+                                                   th:data-production-id="${production.id}"
+                                                   onchange="handlePdfUpload(this)">
+                                        </div>
+                                        <!-- 문서 목록 (JS로 동적 로드) -->
+                                        <div th:id="'doc-list-' + ${production.id}"
+                                             class="space-y-1.5 min-h-[28px]">
+                                            <p class="text-xs text-gray-400 italic">로드 중...</p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -162,12 +197,20 @@
     function toggleExhibition(btn) {
         var panel = btn.nextElementSibling;
         var icon  = btn.querySelector('.chevron-icon');
+        var isOpening = panel.classList.contains('hidden');
         panel.classList.toggle('hidden');
-        icon.style.transform = panel.classList.contains('hidden') ? '' : 'rotate(180deg)';
+        icon.style.transform = isOpening ? 'rotate(180deg)' : '';
+
+        // 패널을 열 때 각 작품의 PDF 문서 목록 로드
+        if (isOpening) {
+            panel.querySelectorAll('[data-production-id]').forEach(function(card) {
+                loadDocs(card.dataset.exhibitionId, card.dataset.productionId);
+            });
+        }
     }
 
     // ── Log ──
-    function log(msg, type) {
+    function addLog(msg, type) {
         var area = document.getElementById('logArea');
         var p = document.createElement('p');
         var time = new Date().toLocaleTimeString('ko-KR');
@@ -176,8 +219,6 @@
         p.textContent = '[' + time + '] ' + msg;
         area.appendChild(p);
         area.scrollTop = area.scrollHeight;
-
-        // Clear placeholder
         var placeholder = area.querySelector('.italic');
         if (placeholder) placeholder.remove();
     }
@@ -186,30 +227,30 @@
             '<p class="text-slate-500 italic">작업을 실행하면 여기에 로그가 표시됩니다.</p>';
     }
 
-    // ── API Calls ──
+    // ── Description 인덱싱 ──
     function indexAll() {
-        log('전체 작품 일괄 인덱싱 시작...', 'info');
+        addLog('전체 작품 일괄 인덱싱 시작...', 'info');
         fetch('/admin/api/rag/index/descriptions', { method: 'POST' })
             .then(function(r) { return r.text(); })
-            .then(function(t) { log('완료: ' + t, 'success'); })
-            .catch(function(e) { log('오류: ' + e, 'error'); });
+            .then(function(t) { addLog('완료: ' + t, 'success'); })
+            .catch(function(e) { addLog('오류: ' + e, 'error'); });
     }
 
     function indexOne(id, title) {
-        log('인덱싱 시작: ' + title + ' (ID: ' + id + ')', 'info');
+        addLog('설명 인덱싱: ' + title + ' (ID: ' + id + ')', 'info');
         fetch('/admin/api/rag/index/productions/' + id + '/description', { method: 'POST' })
             .then(function(r) { return r.text(); })
-            .then(function(t) { log('완료: ' + t, 'success'); })
-            .catch(function(e) { log('오류: ' + e, 'error'); });
+            .then(function(t) { addLog('완료: ' + t, 'success'); })
+            .catch(function(e) { addLog('오류: ' + e, 'error'); });
     }
 
     function deleteIndex(id, title) {
-        if (!confirm('「' + title + '」의 인덱스를 삭제하시겠습니까?')) return;
-        log('인덱스 삭제: ' + title + ' (ID: ' + id + ')', 'info');
+        if (!confirm('「' + title + '」의 설명 인덱스를 삭제하시겠습니까?')) return;
+        addLog('설명 인덱스 삭제: ' + title, 'info');
         fetch('/admin/api/rag/index/productions/' + id + '/description', { method: 'DELETE' })
             .then(function(r) { return r.text(); })
-            .then(function(t) { log('삭제 완료: ' + t, 'success'); })
-            .catch(function(e) { log('오류: ' + e, 'error'); });
+            .then(function(t) { addLog('삭제 완료: ' + t, 'success'); })
+            .catch(function(e) { addLog('오류: ' + e, 'error'); });
     }
 
     function getDocStatus() {
@@ -217,9 +258,100 @@
             .then(function(r) { return r.text(); })
             .then(function(t) {
                 document.getElementById('docStatusText').textContent = t;
-                log('인덱스 현황: ' + t, 'success');
+                addLog('인덱스 현황: ' + t, 'success');
             })
-            .catch(function(e) { log('현황 조회 오류: ' + e, 'error'); });
+            .catch(function(e) { addLog('현황 조회 오류: ' + e, 'error'); });
+    }
+
+    // ── PDF 문서 목록 로드 ──
+    function loadDocs(exhibitionId, productionId) {
+        var listEl = document.getElementById('doc-list-' + productionId);
+        if (!listEl) return;
+
+        fetch('/api/exhibitions/' + exhibitionId + '/productions/' + productionId + '/documents')
+            .then(function(r) { return r.json(); })
+            .then(function(docs) {
+                renderDocList(listEl, exhibitionId, productionId, docs);
+            })
+            .catch(function() {
+                listEl.innerHTML = '<p class="text-xs text-red-400">문서 목록 조회 실패</p>';
+            });
+    }
+
+    function renderDocList(listEl, exhibitionId, productionId, docs) {
+        listEl.innerHTML = '';
+        if (docs.length === 0) {
+            listEl.innerHTML = '<p class="text-xs text-gray-400 italic">등록된 발표자료가 없습니다.</p>';
+            return;
+        }
+        docs.forEach(function(doc) {
+            var item = document.createElement('div');
+            item.className = 'flex items-center gap-2 px-3 py-2 bg-indigo-50 rounded-lg';
+            item.id = 'rag-doc-' + doc.id;
+            item.innerHTML =
+                '<i class="fas fa-file-pdf text-indigo-400 flex-shrink-0 text-xs"></i>' +
+                '<div class="flex-1 min-w-0">' +
+                    '<p class="text-xs font-medium text-indigo-800 truncate">' + doc.originalFileName + '</p>' +
+                    '<p class="text-xs text-indigo-400">' + doc.chunkCount + '개 청크</p>' +
+                '</div>' +
+                '<button type="button" ' +
+                    'onclick="deleteDoc(\'' + exhibitionId + '\',\'' + productionId + '\',' + doc.id + ',\'' + doc.originalFileName + '\')" ' +
+                    'class="flex-shrink-0 text-xs text-gray-400 hover:text-red-500 transition-colors px-2 py-1 rounded hover:bg-red-50">' +
+                    '<i class="fas fa-trash-alt"></i></button>';
+            listEl.appendChild(item);
+        });
+    }
+
+    // ── PDF 문서 삭제 ──
+    function deleteDoc(exhibitionId, productionId, docId, fileName) {
+        if (!confirm('「' + fileName + '」를 삭제하면 해당 지식이 AI 도슨트에서 제거됩니다. 계속하시겠습니까?')) return;
+        addLog('PDF 삭제 중: ' + fileName, 'info');
+        fetch('/api/exhibitions/' + exhibitionId + '/productions/' + productionId + '/documents/' + docId,
+              { method: 'DELETE' })
+            .then(function(r) {
+                if (r.ok) {
+                    var el = document.getElementById('rag-doc-' + docId);
+                    if (el) el.remove();
+                    var listEl = document.getElementById('doc-list-' + productionId);
+                    if (listEl && listEl.children.length === 0) {
+                        listEl.innerHTML = '<p class="text-xs text-gray-400 italic">등록된 발표자료가 없습니다.</p>';
+                    }
+                    addLog('삭제 완료: ' + fileName, 'success');
+                    getDocStatus();
+                }
+            })
+            .catch(function(e) { addLog('삭제 오류: ' + e, 'error'); });
+    }
+
+    // ── PDF 업로드 ──
+    function handlePdfUpload(input) {
+        var exhibitionId = input.dataset.exhibitionId;
+        var productionId = input.dataset.productionId;
+        if (!input.files || input.files.length === 0) return;
+
+        var fileArr = Array.from(input.files);
+        fileArr.forEach(function(file) { addLog('업로드 대기: ' + file.name, 'info'); });
+
+        var formData = new FormData();
+        fileArr.forEach(function(file) { formData.append('files', file); });
+
+        fetch('/api/exhibitions/' + exhibitionId + '/productions/' + productionId + '/documents',
+              { method: 'POST', body: formData })
+            .then(function(r) {
+                if (r.ok) return r.json();
+                throw new Error('업로드 실패 (HTTP ' + r.status + ')');
+            })
+            .then(function(docs) {
+                docs.forEach(function(doc) {
+                    addLog('인덱싱 완료: ' + doc.originalFileName + ' (' + doc.chunkCount + '개 청크)', 'success');
+                });
+                loadDocs(exhibitionId, productionId);
+                getDocStatus();
+            })
+            .catch(function(e) { addLog('오류: ' + e.message, 'error'); });
+
+        // 같은 파일 재선택 허용
+        input.value = '';
     }
 </script>
 </body>

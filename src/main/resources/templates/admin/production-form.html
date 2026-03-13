@@ -39,26 +39,27 @@
                 </div>
 
                 <!-- Form Body -->
-                <form th:action="@{/admin/exhibitions/{id}/productions(id=${exhibitionId})}"
+                <form id="productionForm"
+                      th:action="@{/admin/exhibitions/{id}/productions(id=${exhibitionId})}"
                       th:object="${productionRequestDto}"
                       method="post"
                       enctype="multipart/form-data"
                       class="px-8 py-6 space-y-5">
 
                     <div class="grid grid-cols-2 gap-4">
-                        <!-- Teamname -->
+                        <!-- Teamname / Artist -->
                         <div>
-                            <label for="teamname" class="block text-sm font-semibold text-gray-700 mb-1.5">팀명</label>
+                            <label for="teamname" class="block text-sm font-semibold text-gray-700 mb-1.5">팀명 / 작가명</label>
                             <input type="text" id="teamname" th:field="*{teamname}"
                                    class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow"
-                                   placeholder="팀 이름">
+                                   placeholder="팀명 또는 작가명">
                         </div>
-                        <!-- Generation -->
+                        <!-- Generation / Release Year -->
                         <div>
-                            <label for="generation" class="block text-sm font-semibold text-gray-700 mb-1.5">기수</label>
+                            <label for="generation" class="block text-sm font-semibold text-gray-700 mb-1.5">기수 / 출시년도</label>
                             <input type="number" id="generation" th:field="*{generation}"
                                    class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow"
-                                   placeholder="예: 5">
+                                   placeholder="기수 또는 연도 (예: 5 / 2024)">
                         </div>
                     </div>
 
@@ -78,9 +79,12 @@
                                   placeholder="작품에 대한 상세 설명을 입력하세요. AI 도슨트에서 활용됩니다."></textarea>
                     </div>
 
-                    <!-- File Upload -->
+                    <!-- ① 작품 이미지 (Required) — 이미지 또는 패널 PDF -->
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1.5">이미지 파일</label>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+                            작품 이미지 / 프로젝트 이미지
+                            <span class="text-red-500 ml-0.5">*</span>
+                        </label>
                         <div id="dropZone"
                              class="drop-zone rounded-xl p-6 text-center cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors"
                              onclick="document.getElementById('files').click()"
@@ -89,13 +93,36 @@
                              ondrop="handleDrop(event)">
                             <i class="fas fa-cloud-arrow-up text-3xl text-gray-300 mb-2"></i>
                             <p class="text-sm font-medium text-gray-600">클릭 또는 파일을 여기에 드래그하세요</p>
-                            <p class="text-xs text-gray-400 mt-1">PNG, JPG, GIF 지원 · 다중 선택 가능 · 최대 100MB</p>
+                            <p class="text-xs text-gray-400 mt-1">PNG · JPG · GIF · PDF</p>
                         </div>
-                        <input type="file" id="files" name="files" multiple
+                        <input type="file" id="files" name="files" multiple required
+                               accept="image/*,.pdf,application/pdf"
                                class="hidden"
                                onchange="showPreviews(this.files)">
                         <!-- Preview Grid -->
                         <div id="previewGrid" class="grid grid-cols-4 gap-3 mt-3 hidden"></div>
+                        <!-- PDF 업로드 시 안내 배너 (PDF 선택 시에만 표시) -->
+                        <div id="panelPdfBanner"
+                             class="hidden mt-2 flex items-start gap-2 px-3 py-2.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-700">
+                            <i class="fas fa-triangle-exclamation mt-0.5 flex-shrink-0"></i>
+                            <span>
+                                PDF는 <strong>작품 패널(전시 이미지)</strong>로 변환됩니다.
+                                발표 대본·발표자료를 AI 도슨트 지식으로 등록하려면 아래
+                                <strong>「AI 지식 문서」섹션</strong>을 이용하세요.
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- ② AI 지식 문서 안내 (등록 후 수정 페이지에서 추가) -->
+                    <div class="flex items-start gap-3 px-4 py-3 rounded-xl bg-indigo-50 border border-indigo-100">
+                        <i class="fas fa-brain text-indigo-400 mt-0.5 flex-shrink-0"></i>
+                        <div class="text-xs text-indigo-600 leading-relaxed">
+                            <p class="font-semibold mb-0.5">발표 대본 · 발표자료 (AI 지식 문서)</p>
+                            <p class="text-indigo-400">
+                                발표자료 PDF는 작품 등록 후 <strong>수정 페이지</strong>에서 별도로 추가할 수 있습니다.
+                                이미지와 별도로 업로드되며 전시에는 노출되지 않습니다.
+                            </p>
+                        </div>
                     </div>
 
                     <!-- Actions -->
@@ -117,14 +144,41 @@
     </div>
 </div>
 
+<!-- ① 로딩 오버레이 -->
+<div id="loadingOverlay"
+     class="fixed inset-0 z-50 hidden flex items-center justify-center bg-white/75 backdrop-blur-sm">
+    <div class="flex flex-col items-center gap-5 w-72 px-8 py-8 bg-white rounded-2xl shadow-xl border border-gray-100">
+        <!-- 스피너 아이콘 -->
+        <div class="w-14 h-14 rounded-2xl bg-indigo-50 flex items-center justify-center">
+            <i class="fas fa-spinner fa-spin text-indigo-500 text-2xl"></i>
+        </div>
+        <!-- 메시지 -->
+        <div class="text-center">
+            <p class="font-semibold text-gray-800 text-sm" id="loadingMsg">파일 업로드 중...</p>
+            <p class="text-xs text-gray-400 mt-1" id="loadingSubMsg">잠시만 기다려 주세요</p>
+        </div>
+        <!-- 프로그레스 바 -->
+        <div class="w-full">
+            <div class="flex justify-between text-xs text-gray-400 mb-1.5">
+                <span>처리 중</span>
+                <span id="progressPct" class="font-medium text-indigo-500">0%</span>
+            </div>
+            <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div id="progressBar"
+                     class="h-full bg-indigo-500 rounded-full"
+                     style="width: 0%; transition: width 0.4s ease-out;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+    // ── 이미지 드롭/프리뷰 ──
     function handleDrop(e) {
         e.preventDefault();
         document.getElementById('dropZone').classList.remove('drag-over');
-        var dt = e.dataTransfer;
-        var files = dt.files;
-        document.getElementById('files').files = files;
-        showPreviews(files);
+        document.getElementById('files').files = e.dataTransfer.files;
+        showPreviews(e.dataTransfer.files);
     }
 
     function showPreviews(files) {
@@ -133,23 +187,33 @@
         if (!files || files.length === 0) { grid.classList.add('hidden'); return; }
         grid.classList.remove('hidden');
 
+        var hasPdf = false;
         Array.from(files).forEach(function(file) {
             var wrapper = document.createElement('div');
             wrapper.className = 'relative rounded-lg overflow-hidden border border-gray-200 bg-gray-50 aspect-square';
 
             if (file.type.startsWith('image/')) {
                 var reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = function(ev) {
                     var img = document.createElement('img');
-                    img.src = e.target.result;
+                    img.src = ev.target.result;
                     img.className = 'w-full h-full object-cover';
                     wrapper.appendChild(img);
                 };
                 reader.readAsDataURL(file);
+            } else if (file.type === 'application/pdf') {
+                hasPdf = true;
+                var icon = document.createElement('div');
+                icon.className = 'w-full h-full flex flex-col items-center justify-center p-2 bg-amber-50';
+                icon.innerHTML = '<i class="fas fa-file-pdf text-amber-400 text-2xl mb-1"></i>' +
+                                 '<span class="text-xs text-amber-600 font-medium text-center leading-tight">패널 변환</span>' +
+                                 '<span class="text-xs text-amber-400 text-center break-all leading-tight mt-0.5">' + file.name + '</span>';
+                wrapper.appendChild(icon);
             } else {
                 var icon = document.createElement('div');
                 icon.className = 'w-full h-full flex flex-col items-center justify-center p-2';
-                icon.innerHTML = '<i class="fas fa-file text-gray-400 text-2xl mb-1"></i><span class="text-xs text-gray-500 text-center break-all leading-tight">' + file.name + '</span>';
+                icon.innerHTML = '<i class="fas fa-file text-gray-400 text-2xl mb-1"></i>' +
+                                 '<span class="text-xs text-gray-500 text-center break-all leading-tight">' + file.name + '</span>';
                 wrapper.appendChild(icon);
             }
 
@@ -157,15 +221,64 @@
             label.className = 'absolute bottom-0 inset-x-0 bg-black/40 text-white text-xs px-1.5 py-0.5 truncate';
             label.textContent = file.name;
             wrapper.appendChild(label);
-
             grid.appendChild(wrapper);
         });
 
-        // Update drop zone text
+        // PDF 선택 시 경고 배너 표시
+        var banner = document.getElementById('panelPdfBanner');
+        hasPdf ? banner.classList.remove('hidden') : banner.classList.add('hidden');
+
         document.getElementById('dropZone').innerHTML =
             '<i class="fas fa-check-circle text-2xl text-emerald-400 mb-1"></i>' +
             '<p class="text-sm font-medium text-gray-700">' + files.length + '개 파일 선택됨</p>' +
             '<p class="text-xs text-gray-400 mt-0.5">다시 클릭해 변경할 수 있습니다</p>';
+    }
+
+    // ── 로딩 오버레이 & 프로그레스 ──
+    var progressTimer = null;
+
+    document.getElementById('productionForm').addEventListener('submit', function() {
+        showLoading();
+    });
+
+    function showLoading() {
+        document.getElementById('loadingOverlay').classList.remove('hidden');
+        animateProgress();
+    }
+
+    function animateProgress() {
+        var bar   = document.getElementById('progressBar');
+        var pct   = document.getElementById('progressPct');
+        var msg   = document.getElementById('loadingMsg');
+        var sub   = document.getElementById('loadingSubMsg');
+        var current = 0;
+
+        var phases = [
+            { until: 30, speed: 2.0,  label: '파일 업로드 중...', sub: '서버에 파일을 전송하고 있습니다' },
+            { until: 75, speed: 0.5,  label: '이미지 처리 중...',  sub: 'GIF 프레임 분리 또는 PDF 패널 변환' },
+            { until: 92, speed: 0.1,  label: '마무리 중...',        sub: '거의 완료되었습니다' }
+        ];
+        var phaseIdx = 0;
+
+        progressTimer = setInterval(function() {
+            // 현재 단계 결정
+            while (phaseIdx < phases.length - 1 && current >= phases[phaseIdx].until) {
+                phaseIdx++;
+                msg.textContent = phases[phaseIdx].label;
+                sub.textContent = phases[phaseIdx].sub;
+            }
+
+            if (current >= 92) {
+                clearInterval(progressTimer);
+                return;
+            }
+
+            current += phases[phaseIdx].speed;
+            if (current > 92) current = 92;
+
+            bar.style.width = current + '%';
+            pct.textContent = Math.floor(current) + '%';
+        }, 120);
     }
 </script>
 </body>

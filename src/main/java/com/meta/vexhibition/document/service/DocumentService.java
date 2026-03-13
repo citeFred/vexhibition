@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,30 +30,29 @@ public class DocumentService {
     private final RagService ragService;
 
     /**
-     * PDF 업로드 → S3 저장(FileService) → File 엔티티 생성 → Document 저장 → pgvector 인덱싱
+     * 여러 PDF 업로드 → 각 파일별 S3 저장 → File 엔티티 생성 → Document 저장 → pgvector 인덱싱
      */
-    public DocumentResponseDto uploadAndIndex(Long exhibitionId, Long productionId, MultipartFile pdfFile) {
-        if (pdfFile == null || pdfFile.isEmpty()) {
-            throw new IllegalArgumentException("파일이 비어있습니다.");
-        }
-        if (!"application/pdf".equals(pdfFile.getContentType())) {
-            throw new IllegalArgumentException("PDF 파일만 업로드할 수 있습니다.");
-        }
-
+    public List<DocumentResponseDto> uploadAndIndexAll(Long exhibitionId, Long productionId, List<MultipartFile> pdfFiles) {
         Production production = getValidProduction(exhibitionId, productionId);
 
-        // S3 업로드 + File 엔티티 생성 (FileService 재사용, displayOrder = null)
-        File file = fileService.uploadDocumentFile(production, pdfFile);
+        List<DocumentResponseDto> results = new ArrayList<>();
+        for (MultipartFile pdfFile : pdfFiles) {
+            if (pdfFile == null || pdfFile.isEmpty()) continue;
+            if (!"application/pdf".equals(pdfFile.getContentType())) {
+                throw new IllegalArgumentException("PDF 파일만 업로드할 수 있습니다: " + pdfFile.getOriginalFilename());
+            }
 
-        // Document 저장 (chunkCount는 인덱싱 후 업데이트)
-        Document document = new Document(production, file);
-        Document saved = documentRepository.save(document);
+            File file = fileService.uploadDocumentFile(production, pdfFile);
 
-        // PDF 파싱 → 청크 분할 → pgvector 인덱싱
-        int chunkCount = ragService.indexPdfDocument(pdfFile, productionId, saved.getId());
-        saved.setChunkCount(chunkCount);
+            Document document = new Document(production, file);
+            Document saved = documentRepository.save(document);
 
-        return new DocumentResponseDto(saved);
+            int chunkCount = ragService.indexPdfDocument(pdfFile, productionId, saved.getId());
+            saved.setChunkCount(chunkCount);
+
+            results.add(new DocumentResponseDto(saved));
+        }
+        return results;
     }
 
     /**
@@ -93,12 +93,14 @@ public class DocumentService {
         documents.forEach(this::deleteDocumentInternal);
     }
 
-    // pgvector 청크 삭제 → S3 삭제 → File DB 삭제 → Document DB 삭제
+    // pgvector 청크 삭제 → Document DB 삭제 → File DB 삭제 → S3 삭제
     private void deleteDocumentInternal(Document document) {
         ragService.deletePdfChunks(document.getId(), document.getChunkCount());
-        fileService.deleteFile(document.getFile().getStoredFileName()); // S3 삭제
-        fileRepository.delete(document.getFile());                      // File DB 삭제
-        documentRepository.delete(document);                            // Document DB 삭제
+        File file = document.getFile();
+        documentRepository.delete(document);   // FK 참조(document.file_id) 먼저 제거
+        documentRepository.flush();
+        fileRepository.delete(file);           // File DB 삭제
+        fileService.deleteFile(file.getStoredFileName()); // S3 삭제
     }
 
     private Production getValidProduction(Long exhibitionId, Long productionId) {

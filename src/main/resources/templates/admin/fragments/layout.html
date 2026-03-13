@@ -11,8 +11,8 @@
     <style>
         * { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
         @keyframes fadeSlideIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to   { opacity: 1; transform: translateY(0);     }
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0);    }
         }
         @keyframes scaleIn {
             from { opacity: 0; transform: scale(0.95); }
@@ -68,7 +68,7 @@
 <!-- ===== TOAST ===== -->
 <div th:fragment="toast">
     <div th:if="${successMessage}" id="toastSuccess"
-         class="toast-enter fixed top-5 right-5 z-50 flex items-center gap-3 bg-emerald-500 text-white pl-4 pr-3 py-3 rounded-xl shadow-xl max-w-sm">
+         class="toast-enter fixed bottom-5 right-5 z-50 flex items-center gap-3 bg-emerald-500 text-white pl-4 pr-3 py-3 rounded-xl shadow-xl max-w-sm">
         <i class="fas fa-circle-check text-lg flex-shrink-0"></i>
         <span class="text-sm font-medium flex-1" th:text="${successMessage}"></span>
         <button onclick="this.closest('div').remove()"
@@ -77,7 +77,7 @@
         </button>
     </div>
     <div th:if="${errorMessage}" id="toastError"
-         class="toast-enter fixed top-5 right-5 z-50 flex items-center gap-3 bg-red-500 text-white pl-4 pr-3 py-3 rounded-xl shadow-xl max-w-sm">
+         class="toast-enter fixed bottom-5 right-5 z-50 flex items-center gap-3 bg-red-500 text-white pl-4 pr-3 py-3 rounded-xl shadow-xl max-w-sm">
         <i class="fas fa-circle-exclamation text-lg flex-shrink-0"></i>
         <span class="text-sm font-medium flex-1" th:text="${errorMessage}"></span>
         <button onclick="this.closest('div').remove()"
