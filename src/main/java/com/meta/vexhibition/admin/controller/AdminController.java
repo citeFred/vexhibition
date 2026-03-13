@@ -38,6 +38,14 @@ public class AdminController {
         return "admin/index";
     }
 
+    @GetMapping("/productions")
+    public String allProductions(Model model) {
+        List<ExhibitionResponseDto> exhibitions = exhibitionService.getExhibitions();
+        model.addAttribute("exhibitions", exhibitions);
+        model.addAttribute("currentPage", "all-productions");
+        return "admin/production-all";
+    }
+
     @GetMapping("/docent-test")
     public String docentTest(Model model) {
         List<ExhibitionResponseDto> exhibitions = exhibitionService.getExhibitions();

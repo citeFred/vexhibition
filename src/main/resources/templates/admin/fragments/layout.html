@@ -77,7 +77,21 @@
                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
                th:classappend="${currentPage == 'dashboard'} ? ' bg-indigo-600 text-white shadow-sm' : ' text-slate-400 hover:bg-slate-800 hover:text-white'">
                 <i class="fas fa-landmark w-4 text-center text-xs"></i>
-                전시회 대시보드
+                <span class="flex-1">전시회 대시보드</span>
+                <span th:if="${sidebarExhibitionCount != null and sidebarExhibitionCount > 0}"
+                      class="text-xs px-1.5 py-0.5 rounded-full min-w-[20px] text-center"
+                      th:classappend="${currentPage == 'dashboard'} ? 'bg-indigo-500 text-indigo-100' : 'bg-slate-700 text-slate-400'"
+                      th:text="${sidebarExhibitionCount}"></span>
+            </a>
+            <a href="/admin/productions"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
+               th:classappend="${currentPage == 'all-productions'} ? ' bg-indigo-600 text-white shadow-sm' : ' text-slate-400 hover:bg-slate-800 hover:text-white'">
+                <i class="fas fa-th-list w-4 text-center text-xs"></i>
+                <span class="flex-1">작품 전체 목록</span>
+                <span th:if="${sidebarProductionCount != null and sidebarProductionCount > 0}"
+                      class="text-xs px-1.5 py-0.5 rounded-full min-w-[20px] text-center"
+                      th:classappend="${currentPage == 'all-productions'} ? 'bg-indigo-500 text-indigo-100' : 'bg-slate-700 text-slate-400'"
+                      th:text="${sidebarProductionCount}"></span>
             </a>
 
             <!-- AI 도슨트 -->

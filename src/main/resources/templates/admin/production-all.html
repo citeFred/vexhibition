@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/fragments/layout :: head('작품 전체 목록')}"></head>
+<body class="bg-gray-50 antialiased">
+<div class="flex h-screen overflow-hidden">
+
+    <div th:replace="~{admin/fragments/layout :: sidebar}"></div>
+
+    <div class="flex-1 flex flex-col min-w-0 overflow-auto pt-14 md:pt-0">
+        <div th:replace="~{admin/fragments/layout :: toast}"></div>
+
+        <main class="flex-1 p-4 sm:p-8">
+
+            <!-- Page Header -->
+            <div class="flex items-start sm:items-center justify-between mb-6 gap-3">
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold text-gray-900">작품 전체 목록</h1>
+                    <p class="text-gray-500 text-sm mt-0.5">모든 전시회의 작품을 한눈에 확인하세요.</p>
+                </div>
+                <!-- 전시회 필터 -->
+                <select id="exhibitionFilter" onchange="filterByExhibition()"
+                        class="flex-shrink-0 px-3 py-2 border border-gray-200 rounded-xl text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                    <option value="">전체 전시회</option>
+                    <option th:each="ex : ${exhibitions}"
+                            th:value="${ex.id}"
+                            th:text="${ex.title}"></option>
+                </select>
+            </div>
+
+            <!-- 전시회 없음 -->
+            <div th:if="${exhibitions.isEmpty()}" class="bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col items-center py-20 text-center">
+                <div class="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mb-4">
+                    <i class="fas fa-palette text-2xl text-gray-400"></i>
+                </div>
+                <p class="text-gray-700 font-medium">등록된 작품이 없습니다</p>
+            </div>
+
+            <!-- 전시회별 섹션 -->
+            <div th:unless="${exhibitions.isEmpty()}" class="space-y-6">
+                <section th:each="exhibition : ${exhibitions}"
+                         th:data-exhibition-id="${exhibition.id}"
+                         class="exhibition-section bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+
+                    <!-- 섹션 헤더 -->
+                    <div class="px-4 sm:px-6 py-3.5 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-landmark text-indigo-400 text-sm"></i>
+                            <h2 class="font-semibold text-gray-800 text-sm" th:text="${exhibition.title}"></h2>
+                            <span class="text-xs bg-indigo-100 text-indigo-600 font-semibold px-2 py-0.5 rounded-full"
+                                  th:text="${#lists.size(exhibition.productions)} + '개'"></span>
+                        </div>
+                        <a th:href="@{/admin/exhibitions/{id}/productions(id=${exhibition.id})}"
+                           class="text-xs text-indigo-500 hover:text-indigo-700 transition-colors">
+                            작품 관리 →
+                        </a>
+                    </div>
+
+                    <!-- 작품 없음 -->
+                    <div th:if="${exhibition.productions.isEmpty()}" class="px-6 py-8 text-center text-gray-400 text-sm">
+                        이 전시회에 등록된 작품이 없습니다.
+                    </div>
+
+                    <!-- 모바일 카드 (sm 미만) -->
+                    <div th:unless="${exhibition.productions.isEmpty()}" class="sm:hidden divide-y divide-gray-100">
+                        <div th:each="production : ${exhibition.productions}"
+                             class="production-row flex items-center gap-3 p-4"
+                             th:data-exhibition-id="${exhibition.id}">
+                            <div th:if="${!production.files.isEmpty()}" class="flex-shrink-0">
+                                <img th:src="${production.files[0].path[0]}" alt="thumbnail"
+                                     class="w-14 h-14 rounded-xl object-cover border border-gray-200">
+                            </div>
+                            <div th:if="${production.files.isEmpty()}"
+                                 class="flex-shrink-0 w-14 h-14 rounded-xl bg-gray-100 flex items-center justify-center">
+                                <i class="fas fa-image text-gray-300"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="font-semibold text-gray-900 text-sm truncate" th:text="${production.title}"></p>
+                                <p class="text-xs text-gray-500 mt-0.5" th:text="${production.teamname}"></p>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-violet-100 text-violet-700"
+                                          th:text="${production.generation} + '기'"></span>
+                                    <span class="text-xs text-gray-400"
+                                          th:text="${#temporals.format(production.createAt, 'MM-dd')}"></span>
+                                </div>
+                            </div>
+                            <div class="flex flex-col gap-2 flex-shrink-0">
+                                <a th:href="@{/admin/exhibitions/{eid}/productions/{pid}/edit(eid=${exhibition.id}, pid=${production.id})}"
+                                   class="flex items-center justify-center w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors">
+                                    <i class="fas fa-pen-to-square text-sm"></i>
+                                </a>
+                                <button type="button"
+                                        th:data-title="${production.title}"
+                                        th:data-href="@{/admin/exhibitions/{eid}/productions/{pid}/delete(eid=${exhibition.id}, pid=${production.id})}"
+                                        onclick="var t=this.dataset.title; showDeleteModal('작품 삭제', '「'+t+'」 작품을 삭제합니다.', this.dataset.href)"
+                                        class="flex items-center justify-center w-9 h-9 rounded-lg bg-gray-100 text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors cursor-pointer">
+                                    <i class="fas fa-trash-alt text-sm"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 데스크탑 테이블 (sm 이상) -->
+                    <div th:unless="${exhibition.productions.isEmpty()}" class="hidden sm:block overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                            <tr class="border-b border-gray-100">
+                                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide">미리보기</th>
+                                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide">작품</th>
+                                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide">팀명</th>
+                                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide">기수</th>
+                                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide">파일</th>
+                                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide">등록일</th>
+                                <th class="px-5 py-3 text-right text-xs font-semibold text-gray-400 uppercase tracking-wide">관리</th>
+                            </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-50">
+                            <tr th:each="production : ${exhibition.productions}"
+                                class="production-row hover:bg-gray-50 transition-colors"
+                                th:data-exhibition-id="${exhibition.id}">
+                                <td class="px-5 py-3">
+                                    <div th:if="${!production.files.isEmpty()}">
+                                        <img th:src="${production.files[0].path[0]}" alt="thumbnail"
+                                             class="w-11 h-11 rounded-lg object-cover border border-gray-200">
+                                    </div>
+                                    <div th:if="${production.files.isEmpty()}"
+                                         class="w-11 h-11 rounded-lg bg-gray-100 flex items-center justify-center">
+                                        <i class="fas fa-image text-gray-300 text-xs"></i>
+                                    </div>
+                                </td>
+                                <td class="px-5 py-3">
+                                    <p class="font-medium text-gray-900 text-sm" th:text="${production.title}"></p>
+                                    <p class="text-xs text-gray-400 mt-0.5">ID <span th:text="${production.id}"></span></p>
+                                </td>
+                                <td class="px-5 py-3 text-sm text-gray-700" th:text="${production.teamname}"></td>
+                                <td class="px-5 py-3">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-violet-100 text-violet-700"
+                                          th:text="${production.generation} + '기'"></span>
+                                </td>
+                                <td class="px-5 py-3 text-xs text-gray-500"
+                                    th:text="${#lists.size(production.files)} + '개'"></td>
+                                <td class="px-5 py-3 text-xs text-gray-500"
+                                    th:text="${#temporals.format(production.createAt, 'yyyy-MM-dd')}"></td>
+                                <td class="px-5 py-3">
+                                    <div class="flex items-center justify-end gap-3">
+                                        <a th:href="@{/admin/exhibitions/{eid}/productions/{pid}/edit(eid=${exhibition.id}, pid=${production.id})}"
+                                           class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">
+                                            <i class="fas fa-pen-to-square mr-1"></i>수정
+                                        </a>
+                                        <button type="button"
+                                                th:data-title="${production.title}"
+                                                th:data-href="@{/admin/exhibitions/{eid}/productions/{pid}/delete(eid=${exhibition.id}, pid=${production.id})}"
+                                                onclick="var t=this.dataset.title; showDeleteModal('작품 삭제', '「'+t+'」 작품을 삭제합니다. 관련 파일도 함께 삭제됩니다.', this.dataset.href)"
+                                                class="text-xs font-semibold text-gray-400 hover:text-red-500 transition-colors cursor-pointer">
+                                            <i class="fas fa-trash-alt mr-1"></i>삭제
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<div th:replace="~{admin/fragments/layout :: deleteModal}"></div>
+
+<script>
+    function filterByExhibition() {
+        var val = document.getElementById('exhibitionFilter').value;
+        document.querySelectorAll('.exhibition-section').forEach(function(section) {
+            if (!val || section.dataset.exhibitionId === val) {
+                section.style.display = '';
+            } else {
+                section.style.display = 'none';
+            }
+        });
+    }
+</script>
+</body>
+</html>
