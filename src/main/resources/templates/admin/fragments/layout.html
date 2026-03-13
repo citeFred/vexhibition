@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
-        @keyframes fadeSlideIn {
+        @keyframes fadeSlideUp {
             from { opacity: 0; transform: translateY(16px); }
             to   { opacity: 1; transform: translateY(0);    }
         }
@@ -18,7 +18,7 @@
             from { opacity: 0; transform: scale(0.95); }
             to   { opacity: 1; transform: scale(1);    }
         }
-        .toast-enter  { animation: fadeSlideIn 0.3s ease-out; }
+        .toast-enter  { animation: fadeSlideUp 0.3s ease-out; }
         .modal-enter  { animation: scaleIn 0.2s ease-out;     }
 
         /* File drag zone */
@@ -28,42 +28,69 @@
 </head>
 
 <body>
-<!-- ===== SIDEBAR ===== -->
-<aside th:fragment="sidebar" class="w-80 bg-slate-900 flex flex-col flex-shrink-0 shadow-xl">
-    <!-- Brand -->
-    <div class="h-16 flex items-center px-5 border-b border-slate-800">
-        <a href="/admin" class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-lg flex-shrink-0">
-                <i class="fas fa-cube text-white text-sm"></i>
-            </div>
-            <div class="leading-tight">
-                <p class="text-white font-bold text-base tracking-tight">VEXPO</p>
-                <p class="text-slate-500 text-xs">관리자 콘솔</p>
-            </div>
-        </a>
-    </div>
+<!-- ===== SIDEBAR FRAGMENT ===== -->
+<div th:fragment="sidebar" class="md:contents">
 
-    <!-- Nav -->
-    <nav class="flex-1 p-3 space-y-0.5">
-        <p class="text-slate-600 text-xs font-semibold uppercase tracking-widest px-3 py-2 mt-1">메뉴</p>
-        <a href="/admin"
-           class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
-           th:classappend="${currentPage == 'dashboard'} ? ' bg-indigo-600 text-white shadow-sm' : ' text-slate-400 hover:bg-slate-800 hover:text-white'">
-            <i class="fas fa-th-large w-4 text-center text-xs"></i>
-            전시회 대시보드
+    <!-- ── Mobile top bar ── -->
+    <header class="md:hidden fixed top-0 inset-x-0 z-30 h-14 bg-slate-900 flex items-center px-4 gap-3 border-b border-slate-800 shadow-md">
+        <button type="button"
+                onclick="document.getElementById('mainSidebar').classList.remove('-translate-x-full'); document.getElementById('sidebarBackdrop').classList.remove('hidden')"
+                class="w-9 h-9 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
+            <i class="fas fa-bars"></i>
+        </button>
+        <a href="/admin" class="flex items-center gap-2.5">
+            <div class="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center shadow-sm">
+                <i class="fas fa-cube text-white text-xs"></i>
+            </div>
+            <p class="text-white font-bold tracking-tight">VEXPO</p>
         </a>
-        <a href="/admin/rag"
-           class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
-           th:classappend="${currentPage == 'rag'} ? ' bg-indigo-600 text-white shadow-sm' : ' text-slate-400 hover:bg-slate-800 hover:text-white'">
-            <i class="fas fa-brain w-4 text-center text-xs"></i>
-            RAG 관리
-        </a>
-    </nav>
+    </header>
 
-    <div class="p-4 border-t border-slate-800">
-        <p class="text-slate-600 text-xs text-center">VEXPO © 2025</p>
-    </div>
-</aside>
+    <!-- ── Backdrop (mobile only) ── -->
+    <div id="sidebarBackdrop"
+         class="fixed inset-0 z-40 bg-black/60 hidden md:hidden"
+         onclick="document.getElementById('mainSidebar').classList.add('-translate-x-full'); this.classList.add('hidden')"></div>
+
+    <!-- ── Sidebar ── -->
+    <aside id="mainSidebar"
+           class="fixed md:relative inset-y-0 left-0 z-50 w-72 bg-slate-900 flex flex-col flex-shrink-0 shadow-xl
+                  -translate-x-full md:translate-x-0 transition-transform duration-300">
+
+        <!-- Brand (sidebar header) -->
+        <div class="h-16 flex items-center px-5 border-b border-slate-800 flex-shrink-0">
+            <a href="/admin" class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-lg flex-shrink-0">
+                    <i class="fas fa-cube text-white text-sm"></i>
+                </div>
+                <div class="leading-tight">
+                    <p class="text-white font-bold text-base tracking-tight">VEXPO</p>
+                    <p class="text-slate-500 text-xs">관리자 콘솔</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- Nav -->
+        <nav class="flex-1 p-3 space-y-0.5 overflow-y-auto">
+            <p class="text-slate-600 text-xs font-semibold uppercase tracking-widest px-3 py-2 mt-1">메뉴</p>
+            <a href="/admin"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
+               th:classappend="${currentPage == 'dashboard'} ? ' bg-indigo-600 text-white shadow-sm' : ' text-slate-400 hover:bg-slate-800 hover:text-white'">
+                <i class="fas fa-th-large w-4 text-center text-xs"></i>
+                전시회 대시보드
+            </a>
+            <a href="/admin/rag"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
+               th:classappend="${currentPage == 'rag'} ? ' bg-indigo-600 text-white shadow-sm' : ' text-slate-400 hover:bg-slate-800 hover:text-white'">
+                <i class="fas fa-brain w-4 text-center text-xs"></i>
+                RAG 관리
+            </a>
+        </nav>
+
+        <div class="p-4 border-t border-slate-800 flex-shrink-0">
+            <p class="text-slate-600 text-xs text-center">VEXPO © 2025</p>
+        </div>
+    </aside>
+</div>
 
 <!-- ===== TOAST ===== -->
 <div th:fragment="toast">

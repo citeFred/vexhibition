@@ -1,6 +1,7 @@
 package com.meta.vexhibition.admin.controller;
 
 import com.meta.vexhibition.exhibition.dto.ExhibitionRequestDto;
+import com.meta.vexhibition.exhibition.dto.ExhibitionResponseDto;
 import com.meta.vexhibition.exhibition.service.ExhibitionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -27,6 +28,26 @@ public class AdminExhibitionController {
                                 RedirectAttributes redirectAttributes) {
         exhibitionService.createExhibition(requestDto);
         redirectAttributes.addFlashAttribute("successMessage", "전시회가 성공적으로 등록되었습니다.");
+        return "redirect:/admin";
+    }
+
+    @GetMapping("/{exhibitionId}/edit")
+    public String showEditExhibitionForm(@PathVariable Long exhibitionId, Model model) {
+        ExhibitionResponseDto exhibition = exhibitionService.getExhibitionById(exhibitionId);
+        ExhibitionRequestDto requestDto = new ExhibitionRequestDto();
+        requestDto.setTitle(exhibition.getTitle());
+        model.addAttribute("exhibitionRequestDto", requestDto);
+        model.addAttribute("exhibitionId", exhibitionId);
+        model.addAttribute("currentPage", "dashboard");
+        return "admin/exhibition-edit-form";
+    }
+
+    @PostMapping("/{exhibitionId}/edit")
+    public String updateExhibition(@PathVariable Long exhibitionId,
+                                   @ModelAttribute ExhibitionRequestDto requestDto,
+                                   RedirectAttributes redirectAttributes) {
+        exhibitionService.updateExhibition(exhibitionId, requestDto);
+        redirectAttributes.addFlashAttribute("successMessage", "전시회 정보가 수정되었습니다.");
         return "redirect:/admin";
     }
 

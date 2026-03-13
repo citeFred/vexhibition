@@ -5,70 +5,71 @@
 <div class="flex h-screen overflow-hidden">
 
     <!-- Sidebar -->
-    <aside th:replace="~{admin/fragments/layout :: sidebar}"></aside>
+    <div th:replace="~{admin/fragments/layout :: sidebar}"></div>
 
     <!-- Main -->
-    <div class="flex-1 flex flex-col min-w-0 overflow-auto">
+    <div class="flex-1 flex flex-col min-w-0 overflow-auto pt-14 md:pt-0">
         <div th:replace="~{admin/fragments/layout :: toast}"></div>
 
-        <main class="flex-1 p-8">
+        <main class="flex-1 p-4 sm:p-8">
 
             <!-- Page Header -->
-            <div class="flex items-center justify-between mb-8">
+            <div class="flex items-start sm:items-center justify-between mb-6 sm:mb-8 gap-3">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900">전시회 대시보드</h1>
-                    <p class="text-gray-500 text-sm mt-0.5">전시회와 작품을 한눈에 관리하세요.</p>
+                    <h1 class="text-xl sm:text-2xl font-bold text-gray-900">전시회 대시보드</h1>
+                    <p class="text-gray-500 text-sm mt-0.5 hidden sm:block">전시회와 작품을 한눈에 관리하세요.</p>
                 </div>
                 <a th:href="@{/admin/exhibitions/new}"
-                   class="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm transition-colors">
+                   class="inline-flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm transition-colors flex-shrink-0">
                     <i class="fas fa-plus text-xs"></i>
-                    새 전시회 추가
+                    <span class="hidden sm:inline">새 전시회 추가</span>
+                    <span class="sm:hidden">추가</span>
                 </a>
             </div>
 
             <!-- Stats -->
-            <div class="grid grid-cols-3 gap-5 mb-8">
-                <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-                    <div class="flex items-center justify-between mb-3">
-                        <p class="text-sm font-medium text-gray-500">전시회</p>
-                        <div class="w-9 h-9 rounded-lg bg-indigo-50 flex items-center justify-center">
-                            <i class="fas fa-landmark text-indigo-500 text-sm"></i>
+            <div class="grid grid-cols-3 gap-3 sm:gap-5 mb-6 sm:mb-8">
+                <div class="bg-white rounded-xl border border-gray-200 p-3 sm:p-5 shadow-sm">
+                    <div class="flex items-center justify-between mb-2 sm:mb-3">
+                        <p class="text-xs sm:text-sm font-medium text-gray-500">전시회</p>
+                        <div class="w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-indigo-50 flex items-center justify-center">
+                            <i class="fas fa-landmark text-indigo-500 text-xs sm:text-sm"></i>
                         </div>
                     </div>
-                    <p class="text-3xl font-bold text-gray-900" th:text="${totalExhibitions}">0</p>
-                    <p class="text-xs text-gray-400 mt-1">등록된 전시회 수</p>
+                    <p class="text-2xl sm:text-3xl font-bold text-gray-900" th:text="${totalExhibitions}">0</p>
+                    <p class="text-xs text-gray-400 mt-1 hidden sm:block">등록된 전시회 수</p>
                 </div>
-                <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-                    <div class="flex items-center justify-between mb-3">
-                        <p class="text-sm font-medium text-gray-500">작품</p>
-                        <div class="w-9 h-9 rounded-lg bg-violet-50 flex items-center justify-center">
-                            <i class="fas fa-palette text-violet-500 text-sm"></i>
+                <div class="bg-white rounded-xl border border-gray-200 p-3 sm:p-5 shadow-sm">
+                    <div class="flex items-center justify-between mb-2 sm:mb-3">
+                        <p class="text-xs sm:text-sm font-medium text-gray-500">작품</p>
+                        <div class="w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-violet-50 flex items-center justify-center">
+                            <i class="fas fa-palette text-violet-500 text-xs sm:text-sm"></i>
                         </div>
                     </div>
-                    <p class="text-3xl font-bold text-gray-900" th:text="${totalProductions}">0</p>
-                    <p class="text-xs text-gray-400 mt-1">등록된 작품 합계</p>
+                    <p class="text-2xl sm:text-3xl font-bold text-gray-900" th:text="${totalProductions}">0</p>
+                    <p class="text-xs text-gray-400 mt-1 hidden sm:block">등록된 작품 합계</p>
                 </div>
-                <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-                    <div class="flex items-center justify-between mb-3">
-                        <p class="text-sm font-medium text-gray-500">파일</p>
-                        <div class="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center">
-                            <i class="fas fa-images text-emerald-500 text-sm"></i>
+                <div class="bg-white rounded-xl border border-gray-200 p-3 sm:p-5 shadow-sm">
+                    <div class="flex items-center justify-between mb-2 sm:mb-3">
+                        <p class="text-xs sm:text-sm font-medium text-gray-500">파일</p>
+                        <div class="w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-emerald-50 flex items-center justify-center">
+                            <i class="fas fa-images text-emerald-500 text-xs sm:text-sm"></i>
                         </div>
                     </div>
-                    <p class="text-3xl font-bold text-gray-900" th:text="${totalFiles}">0</p>
-                    <p class="text-xs text-gray-400 mt-1">업로드된 파일 합계</p>
+                    <p class="text-2xl sm:text-3xl font-bold text-gray-900" th:text="${totalFiles}">0</p>
+                    <p class="text-xs text-gray-400 mt-1 hidden sm:block">업로드된 파일 합계</p>
                 </div>
             </div>
 
             <!-- Exhibition List Card -->
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
-                <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                <div class="px-4 sm:px-6 py-4 border-b border-gray-100 flex items-center justify-between">
                     <h2 class="font-semibold text-gray-900">전시회 목록</h2>
                     <span class="text-sm text-gray-400" th:text="${totalExhibitions} + '개'"></span>
                 </div>
 
                 <!-- Empty state -->
-                <div th:if="${exhibitions.isEmpty()}" class="flex flex-col items-center py-16 text-center">
+                <div th:if="${exhibitions.isEmpty()}" class="flex flex-col items-center py-16 text-center px-4">
                     <div class="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mb-4">
                         <i class="fas fa-folder-open text-2xl text-gray-400"></i>
                     </div>
@@ -82,15 +83,15 @@
 
                 <!-- Cards Grid -->
                 <div th:unless="${exhibitions.isEmpty()}"
-                     class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-6">
+                     class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 p-4 sm:p-6">
                     <div th:each="exhibition : ${exhibitions}"
-                         class="group relative bg-white border border-gray-200 rounded-xl p-5 hover:border-indigo-200 hover:shadow-md transition-all duration-200 flex flex-col overflow-hidden">
+                         class="group relative bg-white border border-gray-200 rounded-xl p-4 sm:p-5 hover:border-indigo-200 hover:shadow-md transition-all duration-200 flex flex-col overflow-hidden">
                         <!-- Hover accent -->
                         <div class="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-indigo-500 to-violet-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
 
                         <!-- Icon + Title -->
-                        <div class="flex items-start gap-3 mb-4">
-                            <div class="w-10 h-10 rounded-lg bg-indigo-50 group-hover:bg-indigo-100 flex items-center justify-center flex-shrink-0 transition-colors">
+                        <div class="flex items-start gap-3 mb-3 sm:mb-4">
+                            <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-indigo-50 group-hover:bg-indigo-100 flex items-center justify-center flex-shrink-0 transition-colors">
                                 <i class="fas fa-landmark text-indigo-500 text-sm"></i>
                             </div>
                             <h3 class="font-semibold text-gray-900 text-sm leading-snug break-words pt-1"
@@ -98,7 +99,7 @@
                         </div>
 
                         <!-- Meta -->
-                        <div class="space-y-1.5 flex-grow mb-4">
+                        <div class="space-y-1 sm:space-y-1.5 flex-grow mb-3 sm:mb-4">
                             <div class="flex items-center gap-2 text-xs text-gray-500">
                                 <i class="fas fa-hashtag w-3 text-center text-gray-300"></i>
                                 <span th:text="'ID ' + ${exhibition.id}"></span>
@@ -117,17 +118,24 @@
                         <div class="flex items-center justify-between pt-3 border-t border-gray-100">
                             <a th:href="@{/admin/exhibitions/{id}/productions(id=${exhibition.id})}"
                                class="flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">
-                                <i class="fas fa-pen-to-square"></i>
+                                <i class="fas fa-images"></i>
                                 작품 관리
                             </a>
-                            <button type="button"
-                                    th:data-title="${exhibition.title}"
-                                    th:data-href="@{/admin/exhibitions/{id}/delete(id=${exhibition.id})}"
-                                    onclick="var t=this.dataset.title; showDeleteModal('전시회 삭제', '「'+t+'」 전시회를 삭제합니다. 모든 작품과 파일이 영구 삭제됩니다.', this.dataset.href)"
-                                    class="flex items-center gap-1.5 text-xs font-medium text-gray-400 hover:text-red-500 transition-colors cursor-pointer">
-                                <i class="fas fa-trash-alt"></i>
-                                삭제
-                            </button>
+                            <div class="flex items-center gap-3">
+                                <a th:href="@{/admin/exhibitions/{id}/edit(id=${exhibition.id})}"
+                                   class="flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-indigo-600 transition-colors">
+                                    <i class="fas fa-pen-to-square"></i>
+                                    <span class="hidden sm:inline">수정</span>
+                                </a>
+                                <button type="button"
+                                        th:data-title="${exhibition.title}"
+                                        th:data-href="@{/admin/exhibitions/{id}/delete(id=${exhibition.id})}"
+                                        onclick="var t=this.dataset.title; showDeleteModal('전시회 삭제', '「'+t+'」 전시회를 삭제합니다. 모든 작품과 파일이 영구 삭제됩니다.', this.dataset.href)"
+                                        class="flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-red-500 transition-colors cursor-pointer">
+                                    <i class="fas fa-trash-alt"></i>
+                                    <span class="hidden sm:inline">삭제</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
