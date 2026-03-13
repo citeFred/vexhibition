@@ -71,12 +71,22 @@
 
         <!-- Nav -->
         <nav class="flex-1 p-3 space-y-0.5 overflow-y-auto">
-            <p class="text-slate-600 text-xs font-semibold uppercase tracking-widest px-3 py-2 mt-1">메뉴</p>
+            <!-- 콘텐츠 관리 -->
+            <p class="text-slate-600 text-xs font-semibold uppercase tracking-widest px-3 py-2 mt-1">콘텐츠</p>
             <a href="/admin"
                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
                th:classappend="${currentPage == 'dashboard'} ? ' bg-indigo-600 text-white shadow-sm' : ' text-slate-400 hover:bg-slate-800 hover:text-white'">
-                <i class="fas fa-th-large w-4 text-center text-xs"></i>
+                <i class="fas fa-landmark w-4 text-center text-xs"></i>
                 전시회 대시보드
+            </a>
+
+            <!-- AI 도슨트 -->
+            <p class="text-slate-600 text-xs font-semibold uppercase tracking-widest px-3 py-2 mt-3">AI 도슨트</p>
+            <a href="/admin/docent-test"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
+               th:classappend="${currentPage == 'docent-test'} ? ' bg-indigo-600 text-white shadow-sm' : ' text-slate-400 hover:bg-slate-800 hover:text-white'">
+                <i class="fas fa-microphone w-4 text-center text-xs"></i>
+                도슨트 테스트
             </a>
             <a href="/admin/rag"
                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"

@@ -38,6 +38,14 @@ public class AdminController {
         return "admin/index";
     }
 
+    @GetMapping("/docent-test")
+    public String docentTest(Model model) {
+        List<ExhibitionResponseDto> exhibitions = exhibitionService.getExhibitions();
+        model.addAttribute("exhibitions", exhibitions);
+        model.addAttribute("currentPage", "docent-test");
+        return "admin/docent-test";
+    }
+
     @GetMapping("/rag")
     public String ragManagement(Model model) {
         List<ExhibitionResponseDto> exhibitions = exhibitionService.getExhibitions();

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/fragments/layout :: head('도슨트 테스트')}"></head>
+<body class="bg-gray-50 antialiased">
+<div class="flex h-screen overflow-hidden">
+
+    <div th:replace="~{admin/fragments/layout :: sidebar}"></div>
+
+    <div class="flex-1 flex flex-col min-w-0 overflow-auto pt-14 md:pt-0">
+        <div th:replace="~{admin/fragments/layout :: toast}"></div>
+
+        <main class="flex-1 p-4 sm:p-8">
+
+            <!-- Page Header -->
+            <div class="mb-6">
+                <h1 class="text-xl sm:text-2xl font-bold text-gray-900">도슨트 테스트</h1>
+                <p class="text-gray-500 text-sm mt-0.5">작품을 선택하고 AI 도슨트 대본과 음성을 생성해 확인하세요.</p>
+            </div>
+
+            <div class="flex flex-col lg:flex-row gap-5">
+
+                <!-- ── 왼쪽: 설정 패널 ── -->
+                <div class="lg:w-72 flex-shrink-0 space-y-4">
+
+                    <!-- 작품 선택 -->
+                    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 space-y-4">
+                        <h2 class="text-sm font-bold text-gray-800 flex items-center gap-2">
+                            <i class="fas fa-palette text-indigo-400"></i> 작품 선택
+                        </h2>
+
+                        <!-- 전시회 -->
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 mb-1.5">전시회</label>
+                            <select id="exhibitionSelect" onchange="onExhibitionChange()"
+                                    class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white">
+                                <option value="">전시회를 선택하세요</option>
+                                <option th:each="ex : ${exhibitions}"
+                                        th:value="${ex.id}"
+                                        th:text="${ex.title}"></option>
+                            </select>
+                        </div>
+
+                        <!-- 작품 -->
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 mb-1.5">작품</label>
+                            <select id="productionSelect"
+                                    class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white disabled:opacity-50"
+                                    disabled>
+                                <option value="">먼저 전시회를 선택하세요</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 모드 선택 -->
+                    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 space-y-3">
+                        <h2 class="text-sm font-bold text-gray-800 flex items-center gap-2">
+                            <i class="fas fa-sliders text-indigo-400"></i> 응답 모드
+                        </h2>
+                        <label class="flex items-start gap-3 p-3 rounded-xl border border-gray-200 cursor-pointer hover:border-indigo-300 hover:bg-indigo-50/30 transition-colors has-[:checked]:border-indigo-400 has-[:checked]:bg-indigo-50">
+                            <input type="radio" name="mode" value="prompt" checked class="mt-0.5 accent-indigo-600">
+                            <div>
+                                <p class="text-sm font-semibold text-gray-800">Prompt Only</p>
+                                <p class="text-xs text-gray-400 mt-0.5">작품 설명만으로 대본 생성</p>
+                            </div>
+                        </label>
+                        <label class="flex items-start gap-3 p-3 rounded-xl border border-gray-200 cursor-pointer hover:border-indigo-300 hover:bg-indigo-50/30 transition-colors has-[:checked]:border-indigo-400 has-[:checked]:bg-indigo-50">
+                            <input type="radio" name="mode" value="rag" class="mt-0.5 accent-indigo-600">
+                            <div>
+                                <p class="text-sm font-semibold text-gray-800">RAG</p>
+                                <p class="text-xs text-gray-400 mt-0.5">발표자료 + 유사 작품 맥락 활용</p>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- 실행 버튼 -->
+                    <button id="runBtn" onclick="runTest()"
+                            class="w-full flex items-center justify-center gap-2 px-5 py-3.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow-sm transition-colors">
+                        <i class="fas fa-play text-xs"></i>
+                        도슨트 생성
+                    </button>
+                </div>
+
+                <!-- ── 오른쪽: 결과 패널 ── -->
+                <div class="flex-1 space-y-4">
+
+                    <!-- 상태 / 메타 -->
+                    <div id="resultMeta" class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 hidden">
+                        <div class="flex items-center justify-between flex-wrap gap-3">
+                            <div class="flex items-center gap-2">
+                                <span id="modeTag"
+                                      class="text-xs font-semibold px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-700"></span>
+                                <span id="productionTag"
+                                      class="text-xs font-medium text-gray-500"></span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs text-gray-400">유사도</span>
+                                <span id="similarityBadge"
+                                      class="text-sm font-bold px-3 py-1 rounded-full"></span>
+                            </div>
+                        </div>
+                        <!-- 오디오 플레이어 -->
+                        <div class="mt-4 flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                            <i class="fas fa-headphones text-indigo-400 text-lg flex-shrink-0"></i>
+                            <audio id="audioPlayer" controls class="flex-1 h-9" style="min-width:0"></audio>
+                        </div>
+                    </div>
+
+                    <!-- 대본 -->
+                    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex-1">
+                        <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+                            <i class="fas fa-scroll text-gray-400 text-sm"></i>
+                            <h2 class="text-sm font-bold text-gray-800">생성된 대본</h2>
+                        </div>
+
+                        <!-- Placeholder -->
+                        <div id="resultPlaceholder" class="flex flex-col items-center justify-center py-20 text-center px-4">
+                            <div class="w-16 h-16 rounded-2xl bg-indigo-50 flex items-center justify-center mb-4">
+                                <i class="fas fa-microphone text-2xl text-indigo-300"></i>
+                            </div>
+                            <p class="text-gray-500 font-medium text-sm">작품을 선택하고 도슨트를 생성하세요</p>
+                            <p class="text-gray-400 text-xs mt-1">생성된 대본과 음성이 여기에 표시됩니다</p>
+                        </div>
+
+                        <!-- Loading -->
+                        <div id="resultLoading" class="hidden flex flex-col items-center justify-center py-20 text-center px-4">
+                            <div class="w-16 h-16 rounded-2xl bg-indigo-50 flex items-center justify-center mb-4">
+                                <i class="fas fa-spinner fa-spin text-2xl text-indigo-400"></i>
+                            </div>
+                            <p class="text-gray-700 font-semibold text-sm" id="loadingLabel">대본 생성 중...</p>
+                            <p class="text-gray-400 text-xs mt-1">잠시만 기다려 주세요</p>
+                        </div>
+
+                        <!-- Script Text -->
+                        <div id="resultScript" class="hidden px-6 py-5">
+                            <p id="scriptText"
+                               class="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap"></p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    // 전시회별 작품 데이터
+    var EXHIBITIONS = /*[[${exhibitions}]]*/ [];
+
+    function onExhibitionChange() {
+        var exId = document.getElementById('exhibitionSelect').value;
+        var sel = document.getElementById('productionSelect');
+        sel.innerHTML = '';
+
+        if (!exId) {
+            sel.innerHTML = '<option value="">먼저 전시회를 선택하세요</option>';
+            sel.disabled = true;
+            return;
+        }
+
+        var ex = EXHIBITIONS.find(function(e) { return String(e.id) === String(exId); });
+        if (!ex || !ex.productions || ex.productions.length === 0) {
+            sel.innerHTML = '<option value="">등록된 작품이 없습니다</option>';
+            sel.disabled = true;
+            return;
+        }
+
+        sel.innerHTML = '<option value="">작품을 선택하세요</option>';
+        ex.productions.forEach(function(p) {
+            var opt = document.createElement('option');
+            opt.value = p.id;
+            opt.textContent = p.title + (p.teamname ? '  ·  ' + p.teamname : '');
+            sel.appendChild(opt);
+        });
+        sel.disabled = false;
+    }
+
+    async function runTest() {
+        var productionId = document.getElementById('productionSelect').value;
+        if (!productionId) { alert('작품을 선택해주세요.'); return; }
+
+        var mode = document.querySelector('input[name="mode"]:checked').value;
+        var url = mode === 'rag'
+            ? '/api/ai/tts/productions/' + productionId + '/docent/rag'
+            : '/api/ai/tts/productions/' + productionId + '/docent';
+
+        // UI 상태: 로딩
+        document.getElementById('runBtn').disabled = true;
+        document.getElementById('resultPlaceholder').classList.add('hidden');
+        document.getElementById('resultScript').classList.add('hidden');
+        document.getElementById('resultMeta').classList.add('hidden');
+        document.getElementById('resultLoading').classList.remove('hidden');
+        document.getElementById('loadingLabel').textContent =
+            mode === 'rag' ? 'RAG 검색 및 대본 생성 중...' : '대본 생성 중...';
+
+        try {
+            var res = await fetch(url);
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            var json = await res.json();
+            var data = json.data;
+
+            // 대본
+            document.getElementById('scriptText').textContent = data.script;
+
+            // 유사도 뱃지
+            var pct = (data.similarityWithReference * 100).toFixed(1);
+            var badge = document.getElementById('similarityBadge');
+            badge.textContent = pct + '%';
+            var score = parseFloat(pct);
+            if (score >= 75) {
+                badge.className = 'text-sm font-bold px-3 py-1 rounded-full bg-emerald-100 text-emerald-700';
+            } else if (score >= 50) {
+                badge.className = 'text-sm font-bold px-3 py-1 rounded-full bg-amber-100 text-amber-700';
+            } else {
+                badge.className = 'text-sm font-bold px-3 py-1 rounded-full bg-red-100 text-red-600';
+            }
+
+            // 모드 태그
+            document.getElementById('modeTag').textContent = mode === 'rag' ? 'RAG' : 'Prompt Only';
+
+            // 작품 이름
+            var sel = document.getElementById('productionSelect');
+            document.getElementById('productionTag').textContent =
+                sel.options[sel.selectedIndex].text;
+
+            // 오디오
+            var audio = document.getElementById('audioPlayer');
+            audio.src = 'data:audio/mp3;base64,' + data.stream;
+
+            // UI 상태: 완료
+            document.getElementById('resultLoading').classList.add('hidden');
+            document.getElementById('resultMeta').classList.remove('hidden');
+            document.getElementById('resultScript').classList.remove('hidden');
+
+        } catch (e) {
+            document.getElementById('resultLoading').classList.add('hidden');
+            document.getElementById('resultPlaceholder').classList.remove('hidden');
+            alert('생성 실패: ' + e.message);
+        } finally {
+            document.getElementById('runBtn').disabled = false;
+        }
+    }
+</script>
+</body>
+</html>
