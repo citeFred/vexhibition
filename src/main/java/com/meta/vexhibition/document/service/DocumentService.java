@@ -99,7 +99,14 @@ public class DocumentService {
         File file = document.getFile();
         documentRepository.delete(document);   // FK 참조(document.file_id) 먼저 제거
         documentRepository.flush();
+        // Production의 files 컬렉션에서 제거하여 cascade DELETE 중복 방지
+        // (ProductionService.deleteProduction이 이후 productionRepository.delete 호출 시
+        //  CascadeType.ALL + orphanRemoval이 이미 삭제된 엔티티를 재삭제하려는 것을 막음)
+        if (file.getProduction() != null) {
+            file.getProduction().getFiles().remove(file);
+        }
         fileRepository.delete(file);           // File DB 삭제
+        fileRepository.flush();
         fileService.deleteFile(file.getStoredFileName()); // S3 삭제
     }
 

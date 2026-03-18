@@ -3,13 +3,13 @@ package com.meta.vexhibition.ai.service;
 import com.meta.vexhibition.production.domain.Production;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.ai.document.Document;
-import org.springframework.ai.reader.pdf.PagePdfDocumentReader;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -111,11 +111,9 @@ public class RagService {
      * @return 저장된 청크 수 (ProductionDocument.chunkCount에 저장용)
      */
     public int indexPdfDocument(MultipartFile pdfFile, Long productionId, Long documentId) {
-        Resource pdfResource = toResource(pdfFile);
-
-        // PDF를 페이지 단위로 파싱
-        PagePdfDocumentReader pdfReader = new PagePdfDocumentReader(pdfResource);
-        List<Document> pages = pdfReader.get();
+        // PDFBox 직접 사용 - PagePdfDocumentReader의 CharacterFactory 버그 우회
+        // (빈 텍스트 요소에 charAt(0) 호출 시 StringIndexOutOfBoundsException 발생)
+        List<Document> pages = parsePdfWithPdfBox(pdfFile);
 
         if (pages.isEmpty()) {
             log.warn("PDF에서 텍스트를 추출하지 못했습니다. documentId: {}", documentId);
@@ -218,17 +216,30 @@ public class RagService {
         );
     }
 
-    private Resource toResource(MultipartFile file) {
-        try {
-            final String filename = file.getOriginalFilename();
-            return new ByteArrayResource(file.getBytes()) {
-                @Override
-                public String getFilename() {
-                    return filename;
+    /**
+     * PDFBox로 PDF를 페이지 단위 파싱합니다.
+     * PagePdfDocumentReader 대신 사용 — 한국어/특수 폰트의 빈 텍스트 요소에도 안전합니다.
+     */
+    private List<Document> parsePdfWithPdfBox(MultipartFile pdfFile) {
+        try (PDDocument pdDoc = Loader.loadPDF(pdfFile.getBytes())) {
+            PDFTextStripper stripper = new PDFTextStripper();
+            List<Document> pages = new ArrayList<>();
+            int totalPages = pdDoc.getNumberOfPages();
+            for (int page = 1; page <= totalPages; page++) {
+                stripper.setStartPage(page);
+                stripper.setEndPage(page);
+                String text = stripper.getText(pdDoc);
+                if (text != null && !text.isBlank()) {
+                    pages.add(new Document(text));
                 }
-            };
+            }
+            if (pages.isEmpty()) {
+                log.warn("PDF 텍스트 추출 결과 없음 (스캔 이미지 PDF이거나 텍스트 레이어 없음): {}", pdfFile.getOriginalFilename());
+            }
+            return pages;
         } catch (IOException e) {
-            throw new RuntimeException("PDF 파일을 읽는 데 실패했습니다.", e);
+            throw new RuntimeException("PDF 파싱에 실패했습니다: " + pdfFile.getOriginalFilename(), e);
         }
     }
+
 }
